@@ -1,8 +1,7 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
+// import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tbib_downloader/tbib_downloader.dart';
-import 'package:tbib_downloader_example/services/notification_services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,14 +9,14 @@ void main() async {
   await Permission.storage.request();
 
   await TBIBDownloader().init();
-  await AwesomeNotifications().setListeners(
-      onActionReceivedMethod: MyNotificationService.onActionReceivedMethod,
-      onNotificationCreatedMethod:
-          MyNotificationService.onNotificationCreatedMethod,
-      onNotificationDisplayedMethod:
-          MyNotificationService.onNotificationDisplayedMethod,
-      onDismissActionReceivedMethod:
-          MyNotificationService.onDismissActionReceivedMethod);
+  // await AwesomeNotifications().setListeners(
+  //     onActionReceivedMethod: MyNotificationService.onActionReceivedMethod,
+  //     onNotificationCreatedMethod:
+  //         MyNotificationService.onNotificationCreatedMethod,
+  //     onNotificationDisplayedMethod:
+  //         MyNotificationService.onNotificationDisplayedMethod,
+  //     onDismissActionReceivedMethod:
+  //         MyNotificationService.onDismissActionReceivedMethod);
 
   runApp(const App());
 }

@@ -7,7 +7,7 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  awesome_notifications: ^0.7.5-dev.3
+  flutter_local_notifications: ^14.1.1
   dio: ^5.2.1+1
   external_path: ^1.0.3
   flutter:
@@ -45,8 +45,8 @@ flutter:
         pluginClass: TbibDownloaderPlugin
       ios:
         pluginClass: TbibDownloaderPlugin
-      linux:
-        pluginClass: TbibDownloaderPlugin
+      # linux:
+      #   pluginClass: TbibDownloaderPlugin
       macos:
         pluginClass: TbibDownloaderPlugin
       windows:
