@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:mime/mime.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tbib_downloader/src/service/can_manage_storage.dart';
@@ -41,7 +42,6 @@ class TBIBDownloader {
             channelName: 'Download completed notifications',
             channelDescription: 'Notification channel for download completed',
             defaultColor: Colors.black,
-            enableLights: true,
             ledColor: Colors.white,
             channelShowBadge: false),
       ],
@@ -51,10 +51,14 @@ class TBIBDownloader {
   /// download file from the internet
   Future<String> downloadFile<T>({
     required String url,
+
+    /// file name with extension
     required String fileName,
     String? directoryName,
     String? customDirectory,
     bool showNotification = true,
+    bool showOpenFileButton = true,
+    bool showDeleteFileButton = true,
     Function({required int count, required int total})? onReceiveProgress,
     //required Dio dio,
   }) async {
@@ -65,8 +69,10 @@ class TBIBDownloader {
     } else {
       if (Platform.isAndroid) {
         if (await canManageStorage()) {
+          PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
           downloadDirectory =
-              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/$directoryName/";
+              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/${packageInfo.appName}/$directoryName/";
         } else {
           downloadDirectory =
               "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
@@ -95,6 +101,7 @@ class TBIBDownloader {
         ),
       );
     }
+    //String speedText = "calculating...";
     await dio.download(
       url,
       "$downloadDirectory$fileName",
@@ -112,15 +119,20 @@ class TBIBDownloader {
             return onReceiveProgress?.call(count: count, total: total);
           }
 
+          // calculate speed
+          // if (speedText == "calculating...") {
+          //   speedText = "${(count / 1024).toStringAsFixed(2)} KB/s";
+          // }
           await AwesomeNotifications().createNotification(
             content: NotificationContent(
               id: 1,
               channelKey: 'download_channel',
               title: 'Downloading',
-              body: 'Downloading $fileName',
+              body:
+                  'Downloading $fileName ${total >= 0 ? '(${(count / 1048576).toStringAsFixed(0)} / ${(total / 1048576).toStringAsFixed(0)})' : '${(count / 1048576).toStringAsFixed(0)} / nil'} MB/s',
               notificationLayout: NotificationLayout.ProgressBar,
               wakeUpScreen: true,
-              progress: ((count / total) * 100).toInt(),
+              progress: total <= 0 ? 100 : ((count / total) * 100).toInt(),
             ),
           );
           return onReceiveProgress?.call(count: count, total: total);
@@ -145,6 +157,7 @@ class TBIBDownloader {
         title: 'Download completed',
         body: 'Download completed $fileName',
         wakeUpScreen: true,
+        color: Colors.green,
         payload: {
           'path': "$downloadDirectory$fileName",
           'mime': lookupMimeType(downloadDirectory + fileName)

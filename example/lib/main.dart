@@ -34,12 +34,15 @@ class App extends StatelessWidget {
         appBar: AppBar(
           title: const Text('download file'),
         ),
+        // zip file url download
+        /// pdf file total size issue is https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf
+        /// pdf file total size issue is https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf
         body: Center(
           child: ElevatedButton(
             onPressed: () async {
               var path = await TBIBDownloader().downloadFile(
                   url:
-                      'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
+                      'https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf',
                   fileName: 'test.pdf',
                   directoryName: 'test',
                   onReceiveProgress: ({int? count, int? total}) => debugPrint(
