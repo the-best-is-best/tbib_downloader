@@ -7,11 +7,15 @@
 <!--preimission storage-->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<!-- premission to open file or save file in any path -->
+    <!-- <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/> -->
+    
 <!--preimission notification-->
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
 
     <application
         android:enableOnBackInvokedCallback="true"

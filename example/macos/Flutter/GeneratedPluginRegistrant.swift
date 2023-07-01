@@ -10,6 +10,7 @@ import device_info_plus
 import package_info_plus
 import path_provider_foundation
 import tbib_downloader
+import url_launcher_macos
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AwesomeNotificationsPlugin.register(with: registry.registrar(forPlugin: "AwesomeNotificationsPlugin"))
@@ -17,4 +18,5 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FLTPackageInfoPlusPlugin.register(with: registry.registrar(forPlugin: "FLTPackageInfoPlusPlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   TbibDownloaderPlugin.register(with: registry.registrar(forPlugin: "TbibDownloaderPlugin"))
+  UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
 }

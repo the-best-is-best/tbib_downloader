@@ -7,18 +7,23 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  awesome_notifications: ^0.7.5-dev.3
+  awesome_notifications: ^0.7.4+1
+  device_info_plus: ^9.0.2
   dio: ^5.2.1+1
   external_path: ^1.0.3
+  #file_manager: ^1.0.2
   flutter:
     sdk: flutter
   mime: ^1.0.4
-  open_file: ^3.3.2
+  open_app_file: ^4.0.2
+  #open_file: ^3.3.2
+  # open_file_manager: ^0.0.2
   package_info_plus: ^4.0.2
   path_provider: ^2.0.15
+  permission_handler: ^10.4.1
   plugin_platform_interface: ^2.0.2
-  device_info_plus: ^9.0.2
-  #flutter_local_notifications: ^14.1.1
+  url_launcher: ^6.1.11
+
 dev_dependencies:
   flutter_lints: ^2.0.0
   flutter_test:

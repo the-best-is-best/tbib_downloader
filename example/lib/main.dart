@@ -1,13 +1,10 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:tbib_downloader/tbib_downloader.dart';
 import 'package:tbib_downloader_example/services/notification_services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Permission.storage.request();
 
   await TBIBDownloader().init();
   await AwesomeNotifications().setListeners(
@@ -42,7 +39,7 @@ class App extends StatelessWidget {
             onPressed: () async {
               var path = await TBIBDownloader().downloadFile(
                   url:
-                      'https://cartographicperspectives.org/index.php/journal/article/download/cp25-full/pdf/3698',
+                      'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
                   fileName: 'test.pdf',
                   directoryName: 'test',
                   onReceiveProgress: ({int? count, int? total}) => debugPrint(

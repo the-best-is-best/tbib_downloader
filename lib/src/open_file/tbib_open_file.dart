@@ -1,16 +1,22 @@
 import 'dart:io';
 
-import 'package:open_file/open_file.dart';
+import 'package:flutter/material.dart';
+import 'package:open_app_file/open_app_file.dart';
+import 'package:tbib_downloader/src/service/can_manage_storage.dart';
 
 class TBIBDownloaderOpenFile {
-  void openFile(
+  Future<OpenResult> openFile(
       {required String path,
-      String? type,
+      String? mimeType,
       bool linuxByProcess = false,
       String linuxDesktopName = "xdg",
       String? uti}) async {
     if (!Platform.isAndroid && !Platform.isIOS) {
       throw Exception("Platform not supported");
+    }
+
+    if (await canManageStorage() == false) {
+      throw Exception("Permission not granted");
     }
     var getType = androidType.containsKey('.${path.split(".").last}')
         ? androidType['.${path.split(".").last}']
@@ -18,11 +24,26 @@ class TBIBDownloaderOpenFile {
     var getUti = iosUTI.containsKey('.${path.split(".").last}')
         ? iosUTI['.${path.split(".").last}']
         : null;
-    await OpenFile.open(path,
-        type: type ?? getType,
-        linuxByProcess: linuxByProcess,
-        linuxDesktopName: linuxDesktopName,
-        uti: uti ?? getUti);
+    return await OpenAppFile.open(path,
+        mimeType: mimeType ?? getType, uti: uti ?? getUti);
+  }
+
+  // Future<void> openFolder(String path) async {
+  //   File file = File(path);
+  //   final FileManagerController controller = FileManagerController();
+  //   controller.openDirectory(file);
+  // }
+
+  Future<void> deleteFile(String path) async {
+    if (await canManageStorage() == false) {
+      throw Exception("Permission not granted");
+    }
+    File file = File(path);
+    if (file.existsSync()) {
+      file.deleteSync();
+    } else {
+      debugPrint("File not found");
+    }
   }
 }
 

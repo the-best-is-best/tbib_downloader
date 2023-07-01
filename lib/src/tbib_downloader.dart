@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:mime/mime.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:tbib_downloader/src/service/can_manage_storage.dart';
 
 ///  class for downloading files from the internet
 class TBIBDownloader {
@@ -17,27 +17,33 @@ class TBIBDownloader {
   /// init downloader
   Future<void> init() async {
     await AwesomeNotifications().requestPermissionToSendNotifications();
+    await Permission.storage.request();
+    await Permission.manageExternalStorage.request();
     dio = Dio();
+    // await AwesomeNotifications().removeChannel('download_channel');
+    // await AwesomeNotifications().removeChannel('download_completed_channel');
+
     // init awesome notifications
     await AwesomeNotifications().initialize(
       null,
       [
         NotificationChannel(
-          icon: 'resource://drawable/ic_stat_file_download',
-          channelKey: 'download_channel',
-          channelName: 'Download notifications',
-          channelDescription: 'Notification channel for download progress',
-          defaultColor: Colors.black,
-          ledColor: Colors.white,
-        ),
+            icon: 'resource://drawable/ic_stat_file_download',
+            channelKey: 'download_channel',
+            channelName: 'Download notifications',
+            channelDescription: 'Notification channel for download progress',
+            defaultColor: Colors.black,
+            ledColor: Colors.white,
+            channelShowBadge: false),
         NotificationChannel(
-          icon: 'resource://drawable/ic_stat_file_download_done',
-          channelKey: 'download_completed_channel',
-          channelName: 'Download completed notifications',
-          channelDescription: 'Notification channel for download completed',
-          defaultColor: Colors.black,
-          ledColor: Colors.white,
-        ),
+            icon: 'resource://drawable/ic_stat_file_download_done',
+            channelKey: 'download_completed_channel',
+            channelName: 'Download completed notifications',
+            channelDescription: 'Notification channel for download completed',
+            defaultColor: Colors.black,
+            enableLights: true,
+            ledColor: Colors.white,
+            channelShowBadge: false),
       ],
     );
   }
@@ -53,27 +59,24 @@ class TBIBDownloader {
     //required Dio dio,
   }) async {
     late String downloadDirectory;
-    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    var androidInfo = await deviceInfo.androidInfo;
 
     if (customDirectory != null) {
       downloadDirectory = customDirectory;
     } else {
-      PackageInfo packageInfo = await PackageInfo.fromPlatform();
       if (Platform.isAndroid) {
-        if (int.parse(androidInfo.version.release) > 10) {
+        if (await canManageStorage()) {
           downloadDirectory =
-              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
+              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/$directoryName/";
         } else {
           downloadDirectory =
-              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/${packageInfo.appName}/";
+              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
         }
       } else {
         downloadDirectory =
-            "${(await getApplicationDocumentsDirectory()).path}/";
+            "${(await getApplicationDocumentsDirectory()).path}/$directoryName/";
       }
       if (directoryName != null) {
-        if (Platform.isAndroid && int.parse(androidInfo.version.release) > 10) {
+        if (await canManageStorage()) {
           downloadDirectory = downloadDirectory;
         } else {
           downloadDirectory = "$downloadDirectory$directoryName/";
@@ -124,26 +127,31 @@ class TBIBDownloader {
         }
       },
     );
+    await AwesomeNotifications().cancel(1);
     await AwesomeNotifications().createNotification(
       actionButtons: [
         NotificationActionButton(
-          key: "open",
+          key: "tbib_downloader_open_file",
           label: "Open File",
+        ),
+        NotificationActionButton(
+          key: "tbib_downloader_delete_file",
+          label: "Delete File",
         ),
       ],
       content: NotificationContent(
-        id: 2,
+        id: 1,
         channelKey: 'download_completed_channel',
         title: 'Download completed',
         body: 'Download completed $fileName',
         wakeUpScreen: true,
         payload: {
-          'path': downloadDirectory + fileName,
+          'path': "$downloadDirectory$fileName",
           'mime': lookupMimeType(downloadDirectory + fileName)
         },
       ),
     );
 
-    return downloadDirectory + fileName;
+    return "$downloadDirectory$fileName";
   }
 }
