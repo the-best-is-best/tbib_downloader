@@ -117,7 +117,7 @@ class TBIBDownloader {
               body: 'Downloading $fileName',
               notificationLayout: NotificationLayout.ProgressBar,
               wakeUpScreen: true,
-              progress: (count / total * 100).toInt(),
+              progress: ((count / total) * 100).toInt(),
             ),
           );
           return onReceiveProgress?.call(count: count, total: total);
