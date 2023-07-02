@@ -54,16 +54,33 @@ class MainPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 var path = await TBIBDownloader().downloadFile(
+                  showNotificationWithoutProgress: true,
                   url:
-                      'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
+                      'https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf',
                   fileName: 'dummy.pdf',
                   directoryName: 'test',
-                  onReceiveProgress: ({int? count, int? total}) => debugPrint(
-                      'count: $count, total: $total, progress: ${count! / total!}'),
+                  // onReceiveProgress: ({int? count, int? total}) => debugPrint(
+                  //     'count: $count, total: $total, progress: ${count! / total!}'),
                 );
                 debugPrint('path $path');
               },
               child: const Text('download'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                var path = await TBIBDownloader().downloadFile(
+                  showNotification: false,
+                  url:
+                      'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
+                  fileName: 'dummy1.pdf',
+                  directoryName: 'test',
+                  // onReceiveProgress: ({int? count, int? total}) => debugPrint(
+                  //     'count: $count, total: $total, progress: ${count! / total!}'),
+                );
+                debugPrint('path $path');
+              },
+              child: const Text('download 1'),
             ),
             const SizedBox(height: 20),
             // button close this page and go to new page
