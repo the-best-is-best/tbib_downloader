@@ -35,9 +35,15 @@ class App extends StatelessWidget {
   }
 }
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  double progress = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +57,13 @@ class MainPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (progress > 0)
+              Align(
+                alignment: Alignment.topCenter,
+                child: LinearProgressIndicator(
+                  value: progress,
+                ),
+              ),
             ElevatedButton(
               onPressed: () async {
                 var path = await TBIBDownloader().downloadFile(
@@ -59,10 +72,18 @@ class MainPage extends StatelessWidget {
                       'https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf',
                   fileName: 'dummy.pdf',
                   directoryName: 'test',
-                  // onReceiveProgress: ({int? count, int? total}) => debugPrint(
-                  //     'count: $count, total: $total, progress: ${count! / total!}'),
+                  onReceiveProgress: ({int? receivedBytes, int? totalBytes}) {
+                    // debugPrint(
+                    //     'receivedBytes: $receivedBytes, total: $totalBytes, progress: ${receivedBytes! / totalBytes!}');
+                    setState(() {
+                      progress = (receivedBytes! / totalBytes!);
+                    });
+                  },
                 );
                 debugPrint('path $path');
+                setState(() {
+                  progress = 0;
+                });
               },
               child: const Text('download'),
             ),

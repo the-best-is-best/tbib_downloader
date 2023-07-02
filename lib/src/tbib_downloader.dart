@@ -57,9 +57,10 @@ class TBIBDownloader {
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
-    bool showDownloadSpeed = true,
+    // bool showDownloadSpeed = true,
     bool showNotificationWithoutProgress = false,
-    // Function({required int count, required int total})? onReceiveProgress,
+    Function({required int receivedBytes, required int totalBytes})?
+        onReceiveProgress,
     //required Dio dio,
   }) async {
     late String downloadDirectory;
@@ -83,7 +84,7 @@ class TBIBDownloader {
     }
 
     await Directory(downloadDirectory).create(recursive: true);
-    if (Platform.isIOS || showNotificationWithoutProgress) {
+    if (Platform.isIOS && showNotification) {
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: 1,
@@ -94,10 +95,13 @@ class TBIBDownloader {
         ),
       );
     }
-    String speedText = 'calculating...';
-    int speed = 0;
-    int lastCount = 0;
-    int totalSec = 0;
+    // String speedText = 'calculating...';
+    // int speed = 0;
+    double progress = 0;
+    double totalMB = 0;
+    double receivedMB = 0;
+    // int lastCount = 0;
+    // int totalSec = 0;
     await dio.download(
       url,
       "$downloadDirectory$fileName",
@@ -105,68 +109,71 @@ class TBIBDownloader {
         responseType: ResponseType.bytes,
         followRedirects: false,
       ),
-      onReceiveProgress: !showNotification
-          ? null
-          : (receivedBytes, totalBytes) async {
-              // if (showNotificationWithoutProgress) {
-              //   return onReceiveProgress?.call(
-              //       count: receivedBytes, total: totalBytes);
-              // }
-              if (Platform.isIOS) {
-                // if (showNotification == false) {
-                //   return onReceiveProgress?.call(
-                //       count: receivedBytes, total: totalBytes);
-                // } else {
-                const LinearProgressIndicator();
-                //     }
-              } else {
-                // calculate speed
-                if (speed != 0) {
-                  speedText = "${(speed / 1000000).toStringAsFixed(2)} MB/s";
-                }
-                double progress = 0;
-                double totalMB = 0;
-                double receivedMB = 0;
-                if (totalBytes != -1) {
-                  progress = ((receivedBytes / totalBytes) * 100);
-                  totalMB = totalBytes / 1048576;
-                  receivedMB = receivedBytes / 1048576;
-                } else {
-                  progress = 100;
-                  totalMB = receivedMB = receivedBytes / 1048576;
-                }
+      onReceiveProgress: (receivedBytes, totalBytes) async {
+        if (showNotificationWithoutProgress) {
+          return onReceiveProgress?.call(
+              receivedBytes: receivedBytes, totalBytes: totalBytes);
+        }
+        // await Future.delayed(
+        //     Duration(milliseconds: Platform.isIOS ? 1 : 8000));
+        // if (showNotificationWithoutProgress) {
+        //   return onReceiveProgress?.call(
+        //       count: receivedBytes, total: totalBytes);
+        // }
 
-                await AwesomeNotifications().createNotification(
-                  content: NotificationContent(
-                    id: 1,
-                    channelKey: 'download_channel',
-                    title: 'Downloading',
-                    body:
-                        'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s ${showDownloadSpeed ? ' speed: $speedText' : ''}',
-                    notificationLayout: NotificationLayout.ProgressBar,
-                    wakeUpScreen: true,
-                    progress: progress.toInt(),
-                  ),
-                );
-              }
-              Future.delayed(const Duration(seconds: 1), () async {
-                if (!showDownloadSpeed) {
-                  return;
-                }
-                totalSec++;
-                // calculate internet speed
+        // calculate speed
+        // if (speed != 0) {
+        //   speedText = "${(speed).toStringAsFixed(2)} MB/s";
+        // }
+        if (Platform.isIOS) {
+          return onReceiveProgress?.call(
+              receivedBytes: receivedBytes, totalBytes: totalBytes);
+        } else {
+          if (totalBytes != -1) {
+            progress = receivedMB / (totalBytes / 1048576) * 100;
+            totalMB = totalBytes / 1048576;
+            receivedMB = (receivedBytes / 1048576);
+          } else {
+            progress = 100;
+            totalMB = totalBytes / 1048576;
+          }
 
-                speed = ((lastCount / totalSec) * (totalBytes / receivedBytes))
-                    .toInt();
-                // speed = (count - lastCount) ~/ total;
-                lastCount = receivedBytes;
-              });
+          await AwesomeNotifications().createNotification(
+            content: NotificationContent(
+              id: 1,
+              channelKey: 'download_channel',
+              title: 'Downloading',
+              body:
+                  'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s',
+              notificationLayout: NotificationLayout.ProgressBar,
+              wakeUpScreen: true,
+              progress: progress.toInt(),
+            ),
+          );
 
-              // return onReceiveProgress?.call(
-              //     count: receivedBytes, total: totalBytes);
-            },
+          // if (showDownloadSpeed) {
+          //   // calculate internet speed
+          //   Future.delayed(const Duration(seconds: 1), () async {
+          //     if (!showDownloadSpeed) {
+          //       return;
+          //     }
+          //     totalSec++;
+          //     // calculate internet speed
+
+          //     speed =
+          //         ((lastCount / totalSec) * (totalBytes / receivedBytes))
+          //             .toInt();
+          //     // speed = (count - lastCount) ~/ total;
+          //     lastCount = receivedBytes;
+          //   });
+          // }
+          return onReceiveProgress?.call(
+              receivedBytes: receivedBytes, totalBytes: totalBytes);
+        }
+      },
     );
-    if (showNotification || showNotificationWithoutProgress) {
+
+    if (showNotification) {
       await AwesomeNotifications().cancel(1);
       await AwesomeNotifications().createNotification(
         actionButtons: hideButtons

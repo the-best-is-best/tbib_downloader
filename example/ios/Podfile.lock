@@ -2,8 +2,6 @@ PODS:
   - awesome_notifications (0.7.5-dev.3):
     - Flutter
     - IosAwnCore (= 0.7.5-dev.3)
-  - device_info_plus (0.0.1):
-    - Flutter
   - Flutter (1.0.0)
   - integration_test (0.0.1):
     - Flutter
@@ -21,12 +19,9 @@ PODS:
     - Flutter
   - tbib_downloader (0.0.1):
     - Flutter
-  - url_launcher_ios (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - awesome_notifications (from `.symlinks/plugins/awesome_notifications/ios`)
-  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - open_app_file (from `.symlinks/plugins/open_app_file/ios`)
@@ -35,7 +30,6 @@ DEPENDENCIES:
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - tbib_downloader (from `.symlinks/plugins/tbib_downloader/ios`)
-  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
@@ -44,8 +38,6 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   awesome_notifications:
     :path: ".symlinks/plugins/awesome_notifications/ios"
-  device_info_plus:
-    :path: ".symlinks/plugins/device_info_plus/ios"
   Flutter:
     :path: Flutter
   integration_test:
@@ -62,12 +54,9 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   tbib_downloader:
     :path: ".symlinks/plugins/tbib_downloader/ios"
-  url_launcher_ios:
-    :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
   awesome_notifications: 1b6393d6ce02878dc50d0ae87baf7bdbc9d802a2
-  device_info_plus: 7545d84d8d1b896cb16a4ff98c19f07ec4b298ea
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   integration_test: 13825b8a9334a850581300559b8839134b124670
   IosAwnCore: edf31913fd18960ebcde7c05912dc860ca2b63b2
@@ -77,7 +66,6 @@ SPEC CHECKSUMS:
   path_provider_foundation: eaf5b3e458fc0e5fbb9940fb09980e853fe058b8
   permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
   tbib_downloader: 249caffb18170d1decc811201a43b6445062dfe8
-  url_launcher_ios: 08a3dfac5fb39e8759aeb0abbd5d9480f30fc8b4
 
 PODFILE CHECKSUM: 938e16d38fddf3fe757de570571e0bdcc556b4ae
 
