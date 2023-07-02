@@ -46,12 +46,12 @@ flutter:
         pluginClass: TbibDownloaderPlugin
       ios:
         pluginClass: TbibDownloaderPlugin
-      linux:
-        pluginClass: TbibDownloaderPlugin
-      macos:
-        pluginClass: TbibDownloaderPlugin
-      windows:
-        pluginClass: TbibDownloaderPluginCApi
+      # linux:
+      #   pluginClass: TbibDownloaderPlugin
+      # macos:
+      #   pluginClass: TbibDownloaderPlugin
+      # windows:
+      #   pluginClass: TbibDownloaderPluginCApi
       # web:
       #   pluginClass: TbibDownloaderWeb
       #   fileName: tbib_downloader_web.dart

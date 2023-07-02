@@ -45,8 +45,10 @@ class App extends StatelessWidget {
                       'https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf',
                   fileName: 'test.pdf',
                   directoryName: 'test',
-                  onReceiveProgress: ({int? count, int? total}) => debugPrint(
-                      'count: $count, total: $total, progress: ${count! / total!}'));
+                  disabledDeleteFileButton: false
+                  // onReceiveProgress: ({int? count, int? total}) => debugPrint(
+                  //     'count: $count, total: $total, progress: ${count! / total!}'),
+                  );
               debugPrint(path);
             },
             child: const Text('download'),

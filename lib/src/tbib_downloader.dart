@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -14,6 +15,7 @@ import 'package:tbib_downloader/src/service/can_manage_storage.dart';
 class TBIBDownloader {
   /// download file from the internet
   static late Dio dio;
+  // static late double speed;
 
   /// init downloader
   Future<void> init() async {
@@ -21,9 +23,12 @@ class TBIBDownloader {
     await Permission.storage.request();
     await Permission.manageExternalStorage.request();
     dio = Dio();
-    // await AwesomeNotifications().removeChannel('download_channel');
-    // await AwesomeNotifications().removeChannel('download_completed_channel');
-
+    // await TBIBDownloaderGetSpeed().getSpeed(
+    //   ({double? speed}) {
+    //     speed = speed;
+    //   },
+    // );
+    // log('speed: $speed');
     // init awesome notifications
     await AwesomeNotifications().initialize(
       null,
@@ -57,8 +62,10 @@ class TBIBDownloader {
     String? directoryName,
     String? customDirectory,
     bool showNotification = true,
-    bool showOpenFileButton = true,
-    bool showDeleteFileButton = true,
+    bool disabledOpenFileButton = true,
+    bool disabledDeleteFileButton = true,
+    bool hideButtons = false,
+    bool showDownloadSpeed = false,
     Function({required int count, required int total})? onReceiveProgress,
     //required Dio dio,
   }) async {
@@ -101,7 +108,11 @@ class TBIBDownloader {
         ),
       );
     }
-    //String speedText = "calculating...";
+    // log('speed: $speed');
+    String speedText = 'calculating...';
+    int speed = 0;
+    int lastCount = 0;
+    int totalSec = 0;
     await dio.download(
       url,
       "$downloadDirectory$fileName",
@@ -118,39 +129,61 @@ class TBIBDownloader {
           if (showNotification == false) {
             return onReceiveProgress?.call(count: count, total: total);
           }
-
           // calculate speed
-          // if (speedText == "calculating...") {
-          //   speedText = "${(count / 1024).toStringAsFixed(2)} KB/s";
-          // }
+          if (speed != 0) {
+            speedText = "${(speed / 1048576).toStringAsFixed(2)} MB/s";
+          }
+
+          log('speed text $speedText');
           await AwesomeNotifications().createNotification(
             content: NotificationContent(
               id: 1,
               channelKey: 'download_channel',
               title: 'Downloading',
               body:
-                  'Downloading $fileName ${total >= 0 ? '(${(count / 1048576).toStringAsFixed(0)} / ${(total / 1048576).toStringAsFixed(0)})' : '${(count / 1048576).toStringAsFixed(0)} / nil'} MB/s',
+                  'Downloading $fileName ${total >= 0 ? '(${(count / 1048576).toStringAsFixed(2)} / ${(total / 1048576).toStringAsFixed(2)})' : '${(count / 1048576).toStringAsFixed(2)} / nil'} MB/s ${showDownloadSpeed ? ' speed: $speedText' : ''}',
               notificationLayout: NotificationLayout.ProgressBar,
               wakeUpScreen: true,
               progress: total <= 0 ? 100 : ((count / total) * 100).toInt(),
             ),
           );
+          await Future.delayed(const Duration(seconds: 1), () {
+            if (!showDownloadSpeed) {
+              return;
+            }
+            totalSec++;
+            log('downloaded: ${(count)} last downloaded: $lastCount');
+            // calculate internet speed
+
+            speed = ((lastCount / totalSec) * (total / count)).toInt();
+            // speed = (count - lastCount) ~/ total;
+            lastCount = count;
+            log('new speed: $speed');
+          });
+
           return onReceiveProgress?.call(count: count, total: total);
         }
       },
     );
     await AwesomeNotifications().cancel(1);
     await AwesomeNotifications().createNotification(
-      actionButtons: [
-        NotificationActionButton(
-          key: "tbib_downloader_open_file",
-          label: "Open File",
-        ),
-        NotificationActionButton(
-          key: "tbib_downloader_delete_file",
-          label: "Delete File",
-        ),
-      ],
+      actionButtons: hideButtons
+          ? null
+          : [
+              NotificationActionButton(
+                enabled: disabledOpenFileButton,
+                color: Colors.green,
+                key: "tbib_downloader_open_file",
+                label: "Open File",
+              ),
+              NotificationActionButton(
+                enabled: disabledDeleteFileButton,
+                key: "tbib_downloader_delete_file",
+                isDangerousOption: true,
+                color: Colors.red,
+                label: "Delete File",
+              ),
+            ],
       content: NotificationContent(
         id: 1,
         channelKey: 'download_completed_channel',
