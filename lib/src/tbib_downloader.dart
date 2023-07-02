@@ -62,10 +62,10 @@ class TBIBDownloader {
     String? directoryName,
     String? customDirectory,
     bool showNotification = true,
-    bool disabledOpenFileButton = true,
-    bool disabledDeleteFileButton = true,
+    bool disabledOpenFileButton = false,
+    bool disabledDeleteFileButton = false,
     bool hideButtons = false,
-    bool showDownloadSpeed = false,
+    bool showDownloadSpeed = true,
     Function({required int count, required int total})? onReceiveProgress,
     //required Dio dio,
   }) async {
@@ -134,20 +134,33 @@ class TBIBDownloader {
             speedText = "${(speed / 1048576).toStringAsFixed(2)} MB/s";
           }
 
-          log('speed text $speedText');
-          await AwesomeNotifications().createNotification(
-            content: NotificationContent(
-              id: 1,
-              channelKey: 'download_channel',
-              title: 'Downloading',
-              body:
-                  'Downloading $fileName ${total >= 0 ? '(${(count / 1048576).toStringAsFixed(2)} / ${(total / 1048576).toStringAsFixed(2)})' : '${(count / 1048576).toStringAsFixed(2)} / nil'} MB/s ${showDownloadSpeed ? ' speed: $speedText' : ''}',
-              notificationLayout: NotificationLayout.ProgressBar,
-              wakeUpScreen: true,
-              progress: total <= 0 ? 100 : ((count / total) * 100).toInt(),
-            ),
-          );
-          await Future.delayed(const Duration(seconds: 1), () {
+          if (speed == 0) {
+            await AwesomeNotifications().createNotification(
+              content: NotificationContent(
+                id: 1,
+                channelKey: 'download_channel',
+                title: 'Downloading',
+                body: 'Start Downloading $fileName speed: $speedText',
+                notificationLayout: NotificationLayout.ProgressBar,
+                wakeUpScreen: true,
+                progress: total <= 0 ? 100 : ((count / total) * 100).toInt(),
+              ),
+            );
+          } else {
+            await AwesomeNotifications().createNotification(
+              content: NotificationContent(
+                id: 1,
+                channelKey: 'download_channel',
+                title: 'Downloading',
+                body:
+                    'Downloading $fileName ${total >= 0 ? '(${(count / 1048576).toStringAsFixed(2)} / ${(total / 1048576).toStringAsFixed(2)})' : '${(count / 1048576).toStringAsFixed(2)} / nil'} MB/s ${showDownloadSpeed ? ' speed: $speedText' : ''}',
+                notificationLayout: NotificationLayout.ProgressBar,
+                wakeUpScreen: true,
+                progress: total <= 0 ? 100 : ((count / total) * 100).toInt(),
+              ),
+            );
+          }
+          await Future.delayed(const Duration(seconds: 1), () async {
             if (!showDownloadSpeed) {
               return;
             }
@@ -171,16 +184,16 @@ class TBIBDownloader {
           ? null
           : [
               NotificationActionButton(
-                enabled: disabledOpenFileButton,
-                color: Colors.green,
+                enabled: !disabledOpenFileButton,
+                color: Colors.green.shade900,
                 key: "tbib_downloader_open_file",
                 label: "Open File",
               ),
               NotificationActionButton(
-                enabled: disabledDeleteFileButton,
+                enabled: !disabledDeleteFileButton,
                 key: "tbib_downloader_delete_file",
                 isDangerousOption: true,
-                color: Colors.red,
+                color: Colors.red.shade900,
                 label: "Delete File",
               ),
             ],

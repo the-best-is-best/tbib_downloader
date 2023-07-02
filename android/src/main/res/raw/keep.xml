@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" 
+           tools:keep="@drawable/ic_stat_file_download,
+                        @drawable/ic_stat_file_download_done,
+                        @drawable/ic_stat_icons8_delete_file_90,
+                        @drawable/ic_stat_icons8_open_file_96_1" />

@@ -43,7 +43,7 @@ class App extends StatelessWidget {
               var path = await TBIBDownloader().downloadFile(
                   url:
                       'https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf',
-                  fileName: 'test.pdf',
+                  fileName: 'dummy.pdf',
                   directoryName: 'test',
                   disabledDeleteFileButton: false
                   // onReceiveProgress: ({int? count, int? total}) => debugPrint(
