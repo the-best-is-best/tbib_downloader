@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:open_app_file/open_app_file.dart';
-import 'package:tbib_downloader/src/service/can_manage_storage.dart';
 
 class TBIBDownloaderOpenFile {
   Future<OpenResult> openFile(
@@ -15,9 +14,9 @@ class TBIBDownloaderOpenFile {
       throw Exception("Platform not supported");
     }
 
-    if (await canManageStorage() == false) {
-      throw Exception("Permission not granted");
-    }
+    // if (await canManageStorage() == false) {
+    //   throw Exception("Permission not granted");
+    // }
     var getType = androidType.containsKey('.${path.split(".").last}')
         ? androidType['.${path.split(".").last}']
         : null;
@@ -35,9 +34,9 @@ class TBIBDownloaderOpenFile {
   // }
 
   Future<void> deleteFile(String path) async {
-    if (await canManageStorage() == false) {
-      throw Exception("Permission not granted");
-    }
+    // if (await canManageStorage() == false) {
+    //   throw Exception("Permission not granted");
+    // }
     File file = File(path);
     if (file.existsSync()) {
       file.deleteSync();

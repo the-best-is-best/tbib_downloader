@@ -1,15 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools"
 >
-     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+     <!-- <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/> -->
 
     <application
         android:label="tbib_downloader_example"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true"
-        android:requestLegacyExternalStorage="true"
-        android:preserveLegacyExternalStorage="true"
+      
         >
          
         <activity

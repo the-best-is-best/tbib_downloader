@@ -9,7 +9,6 @@ import 'package:mime/mime.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tbib_downloader/src/service/can_manage_storage.dart';
 
 ///  class for downloading files from the internet
 class TBIBDownloader {
@@ -70,32 +69,26 @@ class TBIBDownloader {
     //required Dio dio,
   }) async {
     late String downloadDirectory;
-
     if (customDirectory != null) {
       downloadDirectory = customDirectory;
     } else {
       if (Platform.isAndroid) {
-        if (await canManageStorage()) {
-          PackageInfo packageInfo = await PackageInfo.fromPlatform();
+        PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
-          downloadDirectory =
-              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/${packageInfo.appName}/$directoryName/";
-        } else {
-          downloadDirectory =
-              "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
-        }
+        downloadDirectory =
+            "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/${packageInfo.appName}/";
       } else {
         downloadDirectory =
             "${(await getApplicationDocumentsDirectory()).path}/$directoryName/";
       }
       if (directoryName != null) {
-        if (await canManageStorage()) {
-          downloadDirectory = downloadDirectory;
-        } else {
-          downloadDirectory = "$downloadDirectory$directoryName/";
-        }
+        downloadDirectory = "$downloadDirectory$directoryName/";
       }
     }
+    if (File(downloadDirectory).existsSync()) {
+      File(downloadDirectory).deleteSync(recursive: true);
+    }
+
     await Directory(downloadDirectory).create(recursive: true);
     if (Platform.isIOS) {
       await AwesomeNotifications().createNotification(
