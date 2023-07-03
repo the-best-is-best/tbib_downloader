@@ -18,9 +18,7 @@ class TBIBDownloader {
   /// download file from the internet
   static late Dio _dio;
   static bool _downloadStarted = false;
-  static const int _receiveThreshold = 1024 * 1024; // 1 MB
-  static late BuildContext _context;
-  static Timer? _timer;
+
   // 100 ms
 
   // static late double speed;
@@ -63,7 +61,6 @@ class TBIBDownloader {
   /// file name with extension
   /// directory name ios only
   Future<String?> downloadFile<T>({
-    required BuildContext context,
     required String url,
     required String fileName,
     String? directoryName,
@@ -71,7 +68,7 @@ class TBIBDownloader {
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
-    Duration refreshNotificationProgress = const Duration(milliseconds: 1),
+    Duration refreshNotificationProgress = const Duration(seconds: 1),
     bool showDownloadSpeed = true,
     bool showNotificationWithoutProgress = false,
     Function({required int receivedBytes, required int totalBytes})?
@@ -79,7 +76,6 @@ class TBIBDownloader {
     //required Dio dio,
   }) async {
     late String downloadDirectory;
-    _context = context;
 
     if (_downloadStarted) {
       dev.log('Download already started');
@@ -146,16 +142,13 @@ class TBIBDownloader {
                 receivedBytes: receivedBytes, totalBytes: totalBytes);
           }
           if (showNotification && totalBytes != -1) {
-            // dev.log(
-            //     'before noti receivedBytes: $receivedBytes, totalBytes: $totalBytes'
-            //     'showNewNotification: $showNewNotification');
             if (showNewNotification) {
               showNewNotification = false;
 
-              _showProgressNotification(showDownloadSpeed, totalBytes,
+              await _showProgressNotification(showDownloadSpeed, totalBytes,
                   receivedBytes, fileName, startTime);
             } else {
-              _timer = handler.post(refreshNotificationProgress, () {
+              handler.post(refreshNotificationProgress, () {
                 showNewNotification = true;
               });
             }
