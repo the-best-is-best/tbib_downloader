@@ -1,7 +1,7 @@
 name: tbib_downloader
-description: A new Flutter plugin project.
-version: 0.0.1-beta-1
-homepage: null
+description: This package for download file and open it you can display notifications and progress notification and can receive download bytes and total bytes.
+version: 0.0.1
+homepage: "https://github.com/the-best-is-best/tbib_downloader"
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

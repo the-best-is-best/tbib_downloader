@@ -8,14 +8,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await TBIBDownloader().init();
-  await AwesomeNotifications().setListeners(
-      onActionReceivedMethod: MyNotificationService.onActionReceivedMethod,
-      onNotificationCreatedMethod:
-          MyNotificationService.onNotificationCreatedMethod,
-      onNotificationDisplayedMethod:
-          MyNotificationService.onNotificationDisplayedMethod,
-      onDismissActionReceivedMethod:
-          MyNotificationService.onDismissActionReceivedMethod);
 
   runApp(const App());
 }
@@ -43,6 +35,19 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  @override
+  void initState() {
+    super.initState();
+    AwesomeNotifications().setListeners(
+        onActionReceivedMethod: MyNotificationService.onActionReceivedMethod,
+        onNotificationCreatedMethod:
+            MyNotificationService.onNotificationCreatedMethod,
+        onNotificationDisplayedMethod:
+            MyNotificationService.onNotificationDisplayedMethod,
+        onDismissActionReceivedMethod:
+            MyNotificationService.onDismissActionReceivedMethod);
+  }
+
   double progress = 0;
   @override
   Widget build(BuildContext context) {
