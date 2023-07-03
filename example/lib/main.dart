@@ -69,9 +69,8 @@ class _MainPageState extends State<MainPage> {
               ElevatedButton(
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
-                    // showNotificationWithoutProgress: false,
-                    url:
-                        'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                    showNotificationWithoutProgress: true,
+                    url: 'http://212.183.159.230/20MB.zip',
                     fileName: 'dummy.pdf',
                     directoryName: 'test',
                     onReceiveProgress: ({int? receivedBytes, int? totalBytes}) {

@@ -10,6 +10,7 @@ import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tbib_downloader/src/service/get_avalible_file.dart';
+import 'package:tbib_downloader/src/service/handler_time.dart';
 
 ///  class for downloading files from the internet
 class TBIBDownloader {
@@ -22,7 +23,6 @@ class TBIBDownloader {
   Future<void> init() async {
     await AwesomeNotifications().requestPermissionToSendNotifications();
     await Permission.storage.request();
-    await Permission.manageExternalStorage.request();
     dio = Dio();
 
     await AwesomeNotifications().initialize(
@@ -64,8 +64,8 @@ class TBIBDownloader {
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
-    // bool showDownloadSpeed = true,
-    // bool showNotificationWithoutProgress = false,
+    //bool showDownloadSpeed = true,
+    bool showNotificationWithoutProgress = false,
     Function({required int receivedBytes, required int totalBytes})?
         onReceiveProgress,
     //required Dio dio,
@@ -107,10 +107,12 @@ class TBIBDownloader {
 
     // int lastCount = 0;
     // int totalSec = 0;
+    Handler handler = Handler();
     String? solvePath;
     if (File('$downloadDirectory$fileName').existsSync()) {
       solvePath = await getAvailableFilePath('$downloadDirectory$fileName');
     }
+    bool showNewNotification = true;
     await dio.download(
       url,
       solvePath ?? "$downloadDirectory$fileName",
@@ -119,23 +121,31 @@ class TBIBDownloader {
         followRedirects: false,
       ),
       onReceiveProgress: (receivedBytes, totalBytes) async {
-        // if (showNotificationWithoutProgress) {
-        //   return onReceiveProgress?.call(
-        //       receivedBytes: receivedBytes, totalBytes: totalBytes);
-        // }
-        // await Future.delayed(
-        //     Duration(milliseconds: Platform.isIOS ? 1 : 8000));
-        // if (showNotificationWithoutProgress) {
-        //   return onReceiveProgress?.call(
-        //       count: receivedBytes, total: totalBytes);
-        // }
+        if (showNotificationWithoutProgress || Platform.isIOS) {
+          return onReceiveProgress?.call(
+              receivedBytes: receivedBytes, totalBytes: totalBytes);
+        }
+        if (showNotification && totalBytes != -1) {
+          // dev.log(
+          //     'before noti receivedBytes: $receivedBytes, totalBytes: $totalBytes'
+          //     'showNewNotification: $showNewNotification');
+          if (showNewNotification) {
+            showNewNotification = false;
 
-        // calculate speed
-        // if (speed != 0) {
-        //   speedText = "${(speed).toStringAsFixed(2)} MB/s";
-        // }
-        return onReceiveProgress?.call(
-            receivedBytes: receivedBytes, totalBytes: totalBytes);
+            await _showProgressNotification(
+                totalBytes, receivedBytes, fileName);
+          } else {
+            handler.post(const Duration(seconds: 1), () {
+              showNewNotification = true;
+            });
+          }
+        }
+        if (totalBytes != -1) {
+          return onReceiveProgress?.call(
+              receivedBytes: receivedBytes, totalBytes: totalBytes);
+        } else {
+          dev.log('totalBytes == -1');
+        }
       },
     );
 
@@ -168,14 +178,14 @@ class TBIBDownloader {
           wakeUpScreen: true,
           color: Colors.green,
           payload: {
-            'path': "$downloadDirectory$fileName",
+            'path': solvePath ?? "$downloadDirectory$fileName",
             'mime': lookupMimeType(downloadDirectory + fileName)
           },
         ),
       );
     }
     downloadStarted = false;
-    return "$downloadDirectory$fileName";
+    return solvePath ?? "$downloadDirectory$fileName";
   }
 
   Future<void> _showProgressNotification(
@@ -183,45 +193,43 @@ class TBIBDownloader {
     int progress = 0;
     double totalMB = 0;
     double receivedMB = 0;
-    Future.delayed(const Duration(milliseconds: 1), () async {
-      if (totalBytes != -1) {
-        progress = min((receivedBytes / totalBytes * 100).round(), 100);
-        totalMB = totalBytes / 1048576;
-        receivedMB = (receivedBytes / 1048576);
-      } else {
-        progress = 100;
-        totalMB = totalBytes / 1048576;
-      }
-
-      await AwesomeNotifications().createNotification(
-        content: NotificationContent(
+    if (totalBytes != -1) {
+      progress = min((receivedBytes / totalBytes * 100).round(), 100);
+      totalMB = totalBytes / 1048576;
+      receivedMB = (receivedBytes / 1048576);
+    } else {
+      progress = 100;
+      totalMB = totalBytes / 1048576;
+    }
+    // dev.log(
+    //     'after noti receivedBytes: $receivedBytes, totalBytes: $totalBytes progress: $progress');
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
           id: 1,
           channelKey: 'download_channel',
           title: 'Downloading',
           body:
               'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s',
           notificationLayout: NotificationLayout.ProgressBar,
-          wakeUpScreen: true,
-          progress: progress.toInt(),
-        ),
-      );
+          // wakeUpScreen: true,
+          progress: progress),
+    );
 
-      // if (showDownloadSpeed) {
-      //   // calculate internet speed
-      //   Future.delayed(const Duration(seconds: 1), () async {
-      //     if (!showDownloadSpeed) {
-      //       return;
-      //     }
-      //     totalSec++;
-      //     // calculate internet speed
+    // if (showDownloadSpeed) {
+    //   // calculate internet speed
+    //   Future.delayed(const Duration(seconds: 1), () async {
+    //     if (!showDownloadSpeed) {
+    //       return;
+    //     }
+    //     totalSec++;
+    //     // calculate internet speed
 
-      //     speed =
-      //         ((lastCount / totalSec) * (totalBytes / receivedBytes))
-      //             .toInt();
-      //     // speed = (count - lastCount) ~/ total;
-      //     lastCount = receivedBytes;
-      //   });
-      // }
-    });
+    //     speed =
+    //         ((lastCount / totalSec) * (totalBytes / receivedBytes))
+    //             .toInt();
+    //     // speed = (count - lastCount) ~/ total;
+    //     lastCount = receivedBytes;
+    //   });
+    // }
   }
 }
