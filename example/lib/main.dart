@@ -50,72 +50,75 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: const Text('download file'),
       ),
+
       // zip file url download
       /// pdf file total size issue is https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf
       /// pdf file total size issue is https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (progress > 0)
-              Align(
-                alignment: Alignment.topCenter,
-                child: LinearProgressIndicator(
-                  value: progress,
-                ),
+      body: Column(
+        children: [
+          //if (progress > 0)
+          Align(
+            alignment: Alignment.topCenter,
+            child: LinearProgressIndicator(
+              value: progress,
+            ),
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  var path = await TBIBDownloader().downloadFile(
+                    // showNotificationWithoutProgress: false,
+                    url:
+                        'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                    fileName: 'dummy.pdf',
+                    directoryName: 'test',
+                    onReceiveProgress: ({int? receivedBytes, int? totalBytes}) {
+                      setState(() {
+                        progress = (receivedBytes! / totalBytes!);
+                      });
+                    },
+                  );
+                  debugPrint('path $path');
+                  setState(() {
+                    progress = 0;
+                  });
+                },
+                child: const Text('download'),
               ),
-            ElevatedButton(
-              onPressed: () async {
-                var path = await TBIBDownloader().downloadFile(
-                  // showNotificationWithoutProgress: false,
-                  url:
-                      'https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf',
-                  fileName: 'dummy.pdf',
-                  directoryName: 'test',
-                  onReceiveProgress: ({int? receivedBytes, int? totalBytes}) {
-                    setState(() {
-                      progress = (receivedBytes! / totalBytes!);
-                    });
-                  },
-                );
-                debugPrint('path $path');
-                setState(() {
-                  progress = 0;
-                });
-              },
-              child: const Text('download'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                var path = await TBIBDownloader().downloadFile(
-                  showNotification: false,
-                  url:
-                      'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
-                  fileName: 'dummy1.pdf',
-                  directoryName: 'test',
-                  // onReceiveProgress: ({int? count, int? total}) => debugPrint(
-                  //     'count: $count, total: $total, progress: ${count! / total!}'),
-                );
-                debugPrint('path $path');
-              },
-              child: const Text('download 1'),
-            ),
-            const SizedBox(height: 20),
-            // button close this page and go to new page
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SecondPage(),
-                  ),
-                );
-              },
-              child: const Text('go to second page'),
-            ),
-          ],
-        ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  var path = await TBIBDownloader().downloadFile(
+                    showNotification: false,
+                    url:
+                        'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
+                    fileName: 'dummy1.pdf',
+                    directoryName: 'test',
+                    // onReceiveProgress: ({int? count, int? total}) => debugPrint(
+                    //     'count: $count, total: $total, progress: ${count! / total!}'),
+                  );
+                  debugPrint('path $path');
+                },
+                child: const Text('download 1'),
+              ),
+              const SizedBox(height: 20),
+              // button close this page and go to new page
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SecondPage(),
+                    ),
+                  );
+                },
+                child: const Text('go to second page'),
+              ),
+            ],
+          )
+        ],
       ),
     );
   }
