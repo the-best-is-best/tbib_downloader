@@ -1,5 +1,6 @@
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:dio/dio.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tbib_downloader/src/service/get_avalible_file.dart';
 
 ///  class for downloading files from the internet
 class TBIBDownloader {
@@ -29,6 +31,10 @@ class TBIBDownloader {
         NotificationChannel(
             icon: 'resource://drawable/ic_stat_file_download',
             channelKey: 'download_channel',
+            importance: NotificationImportance.Low,
+            ledOffMs: 100,
+            ledOnMs: 500,
+            locked: true,
             channelName: 'Download notifications',
             channelDescription: 'Notification channel for download progress',
             defaultColor: Colors.black,
@@ -36,6 +42,7 @@ class TBIBDownloader {
             channelShowBadge: false),
         NotificationChannel(
             icon: 'resource://drawable/ic_stat_file_download_done',
+            importance: NotificationImportance.Max,
             channelKey: 'download_completed_channel',
             channelName: 'Download completed notifications',
             channelDescription: 'Notification channel for download completed',
@@ -58,14 +65,14 @@ class TBIBDownloader {
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
     // bool showDownloadSpeed = true,
-    bool showNotificationWithoutProgress = false,
+    // bool showNotificationWithoutProgress = false,
     Function({required int receivedBytes, required int totalBytes})?
         onReceiveProgress,
     //required Dio dio,
   }) async {
     late String downloadDirectory;
     if (downloadStarted) {
-      log('Download already started');
+      dev.log('Download already started');
       return null;
     }
     downloadStarted = true;
@@ -84,36 +91,38 @@ class TBIBDownloader {
     }
 
     await Directory(downloadDirectory).create(recursive: true);
-    if (Platform.isIOS && showNotification) {
-      await AwesomeNotifications().createNotification(
-        content: NotificationContent(
-          id: 1,
-          channelKey: 'download_channel',
-          title: 'Downloading',
-          body: 'Downloading $fileName',
-          wakeUpScreen: true,
-        ),
-      );
-    }
+    // if (Platform.isIOS && showNotification) {
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 1,
+        channelKey: 'download_channel',
+        title: 'Downloading',
+        body: 'Downloading $fileName',
+        wakeUpScreen: true,
+      ),
+    );
+    // }
     // String speedText = 'calculating...';
     // int speed = 0;
-    double progress = 0;
-    double totalMB = 0;
-    double receivedMB = 0;
+
     // int lastCount = 0;
     // int totalSec = 0;
+    String? solvePath;
+    if (File('$downloadDirectory$fileName').existsSync()) {
+      solvePath = await getAvailableFilePath('$downloadDirectory$fileName');
+    }
     await dio.download(
       url,
-      "$downloadDirectory$fileName",
+      solvePath ?? "$downloadDirectory$fileName",
       options: Options(
         responseType: ResponseType.bytes,
         followRedirects: false,
       ),
       onReceiveProgress: (receivedBytes, totalBytes) async {
-        if (showNotificationWithoutProgress) {
-          return onReceiveProgress?.call(
-              receivedBytes: receivedBytes, totalBytes: totalBytes);
-        }
+        // if (showNotificationWithoutProgress) {
+        //   return onReceiveProgress?.call(
+        //       receivedBytes: receivedBytes, totalBytes: totalBytes);
+        // }
         // await Future.delayed(
         //     Duration(milliseconds: Platform.isIOS ? 1 : 8000));
         // if (showNotificationWithoutProgress) {
@@ -125,56 +134,14 @@ class TBIBDownloader {
         // if (speed != 0) {
         //   speedText = "${(speed).toStringAsFixed(2)} MB/s";
         // }
-        if (Platform.isIOS) {
-          return onReceiveProgress?.call(
-              receivedBytes: receivedBytes, totalBytes: totalBytes);
-        } else {
-          if (totalBytes != -1) {
-            progress = receivedMB / (totalBytes / 1048576) * 100;
-            totalMB = totalBytes / 1048576;
-            receivedMB = (receivedBytes / 1048576);
-          } else {
-            progress = 100;
-            totalMB = totalBytes / 1048576;
-          }
-
-          await AwesomeNotifications().createNotification(
-            content: NotificationContent(
-              id: 1,
-              channelKey: 'download_channel',
-              title: 'Downloading',
-              body:
-                  'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s',
-              notificationLayout: NotificationLayout.ProgressBar,
-              wakeUpScreen: true,
-              progress: progress.toInt(),
-            ),
-          );
-
-          // if (showDownloadSpeed) {
-          //   // calculate internet speed
-          //   Future.delayed(const Duration(seconds: 1), () async {
-          //     if (!showDownloadSpeed) {
-          //       return;
-          //     }
-          //     totalSec++;
-          //     // calculate internet speed
-
-          //     speed =
-          //         ((lastCount / totalSec) * (totalBytes / receivedBytes))
-          //             .toInt();
-          //     // speed = (count - lastCount) ~/ total;
-          //     lastCount = receivedBytes;
-          //   });
-          // }
-          return onReceiveProgress?.call(
-              receivedBytes: receivedBytes, totalBytes: totalBytes);
-        }
+        return onReceiveProgress?.call(
+            receivedBytes: receivedBytes, totalBytes: totalBytes);
       },
     );
 
     if (showNotification) {
-      await AwesomeNotifications().cancel(1);
+      await Future.delayed(const Duration(milliseconds: 500));
+      await AwesomeNotifications().dismiss(1);
       await AwesomeNotifications().createNotification(
         actionButtons: hideButtons
             ? null
@@ -209,5 +176,52 @@ class TBIBDownloader {
     }
     downloadStarted = false;
     return "$downloadDirectory$fileName";
+  }
+
+  Future<void> _showProgressNotification(
+      int totalBytes, int receivedBytes, String fileName) async {
+    int progress = 0;
+    double totalMB = 0;
+    double receivedMB = 0;
+    Future.delayed(const Duration(milliseconds: 1), () async {
+      if (totalBytes != -1) {
+        progress = min((receivedBytes / totalBytes * 100).round(), 100);
+        totalMB = totalBytes / 1048576;
+        receivedMB = (receivedBytes / 1048576);
+      } else {
+        progress = 100;
+        totalMB = totalBytes / 1048576;
+      }
+
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
+          id: 1,
+          channelKey: 'download_channel',
+          title: 'Downloading',
+          body:
+              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s',
+          notificationLayout: NotificationLayout.ProgressBar,
+          wakeUpScreen: true,
+          progress: progress.toInt(),
+        ),
+      );
+
+      // if (showDownloadSpeed) {
+      //   // calculate internet speed
+      //   Future.delayed(const Duration(seconds: 1), () async {
+      //     if (!showDownloadSpeed) {
+      //       return;
+      //     }
+      //     totalSec++;
+      //     // calculate internet speed
+
+      //     speed =
+      //         ((lastCount / totalSec) * (totalBytes / receivedBytes))
+      //             .toInt();
+      //     // speed = (count - lastCount) ~/ total;
+      //     lastCount = receivedBytes;
+      //   });
+      // }
+    });
   }
 }

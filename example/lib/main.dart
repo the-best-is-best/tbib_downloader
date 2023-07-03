@@ -67,14 +67,12 @@ class _MainPageState extends State<MainPage> {
             ElevatedButton(
               onPressed: () async {
                 var path = await TBIBDownloader().downloadFile(
-                  showNotificationWithoutProgress: true,
+                  // showNotificationWithoutProgress: false,
                   url:
                       'https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf',
                   fileName: 'dummy.pdf',
                   directoryName: 'test',
                   onReceiveProgress: ({int? receivedBytes, int? totalBytes}) {
-                    // debugPrint(
-                    //     'receivedBytes: $receivedBytes, total: $totalBytes, progress: ${receivedBytes! / totalBytes!}');
                     setState(() {
                       progress = (receivedBytes! / totalBytes!);
                     });
