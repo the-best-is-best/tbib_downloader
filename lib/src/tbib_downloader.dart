@@ -72,7 +72,7 @@ class TBIBDownloader {
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
     Duration refreshNotificationProgress = const Duration(milliseconds: 1),
-    //bool showDownloadSpeed = true,
+    bool showDownloadSpeed = true,
     bool showNotificationWithoutProgress = false,
     Function({required int receivedBytes, required int totalBytes})?
         onReceiveProgress,
@@ -152,8 +152,8 @@ class TBIBDownloader {
             if (showNewNotification) {
               showNewNotification = false;
 
-              _showProgressNotification(
-                  totalBytes, receivedBytes, fileName, startTime);
+              _showProgressNotification(showDownloadSpeed, totalBytes,
+                  receivedBytes, fileName, startTime);
             } else {
               _timer = handler.post(refreshNotificationProgress, () {
                 showNewNotification = true;
@@ -211,8 +211,8 @@ class TBIBDownloader {
     return solvePath ?? "$downloadDirectory$fileName";
   }
 
-  Future<void> _showProgressNotification(int totalBytes, int receivedBytes,
-      String fileName, DateTime startTime) async {
+  Future<void> _showProgressNotification(bool showDownloadSpeed, int totalBytes,
+      int receivedBytes, String fileName, DateTime startTime) async {
     int progress = 0;
     double totalMB = 0;
     double receivedMB = 0;
@@ -224,9 +224,12 @@ class TBIBDownloader {
       progress = 100;
       totalMB = totalBytes / 1048576;
     }
-    Duration duration = DateTime.now().difference(startTime);
-    double seconds = duration.inMilliseconds / 1000;
-    double speedMbps = receivedMB / seconds * 8;
+    double speedMbps = 0;
+    if (showDownloadSpeed) {
+      Duration duration = DateTime.now().difference(startTime);
+      double seconds = duration.inMilliseconds / 1000;
+      speedMbps = receivedMB / seconds * 8;
+    }
     // dev.log(
     //     'after noti receivedBytes: $receivedBytes, totalBytes: $totalBytes progress: $progress');
     await AwesomeNotifications().createNotification(
@@ -235,27 +238,10 @@ class TBIBDownloader {
           channelKey: 'download_channel',
           title: 'Downloading',
           body:
-              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s',
+              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s ${speedMbps == 0 ? "" : 'speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s'} ',
           notificationLayout: NotificationLayout.ProgressBar,
           wakeUpScreen: true,
           progress: progress),
     );
-
-    // if (showDownloadSpeed) {
-    //   // calculate internet speed
-    //   Future.delayed(const Duration(seconds: 1), () async {
-    //     if (!showDownloadSpeed) {
-    //       return;
-    //     }
-    //     totalSec++;
-    //     // calculate internet speed
-
-    //     speed =
-    //         ((lastCount / totalSec) * (totalBytes / receivedBytes))
-    //             .toInt();
-    //     // speed = (count - lastCount) ~/ total;
-    //     lastCount = receivedBytes;
-    //   });
-    // }
   }
 }
