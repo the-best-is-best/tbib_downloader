@@ -69,7 +69,6 @@ class _MainPageState extends State<MainPage> {
               ElevatedButton(
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
-                    showDownloadSpeed: true,
                     url: 'http://212.183.159.230/50MB.zip',
                     fileName: 'dummy.zip',
                     directoryName: 'test',

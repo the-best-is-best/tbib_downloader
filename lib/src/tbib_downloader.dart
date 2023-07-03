@@ -11,7 +11,6 @@ import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tbib_downloader/src/service/get_avalible_file.dart';
-import 'package:tbib_downloader/src/service/handler_time.dart';
 
 ///  class for downloading files from the internet
 class TBIBDownloader {
@@ -113,9 +112,9 @@ class TBIBDownloader {
 
     // int lastCount = 0;
     // int totalSec = 0;
-    Handler handler = Handler();
     DateTime startTime = DateTime.now();
-
+    DateTime notificationDisplayDate = DateTime.now();
+    DateTime endTime = DateTime.now().add(refreshNotificationProgress);
     String? solvePath;
     if (File('$downloadDirectory$fileName').existsSync()) {
       solvePath = await getAvailableFilePath('$downloadDirectory$fileName');
@@ -130,11 +129,6 @@ class TBIBDownloader {
           followRedirects: false,
         ),
         onReceiveProgress: (receivedBytes, totalBytes) async {
-          // if (!_context.mounted) {
-          //   _timer?.cancel();
-          //   AwesomeNotifications().dismiss(1);
-          //   return;
-          // }
           if (showNotificationWithoutProgress ||
               Platform.isIOS ||
               totalBytes == -1) {
@@ -148,9 +142,17 @@ class TBIBDownloader {
               await _showProgressNotification(showDownloadSpeed, totalBytes,
                   receivedBytes, fileName, startTime);
             } else {
-              handler.post(refreshNotificationProgress, () {
+              notificationDisplayDate = DateTime.now();
+              if (notificationDisplayDate.millisecondsSinceEpoch >
+                  endTime.millisecondsSinceEpoch) {
+                //   await AwesomeNotifications().dismiss(1);
                 showNewNotification = true;
-              });
+                notificationDisplayDate = endTime;
+                endTime = DateTime.now().add(refreshNotificationProgress);
+              }
+
+              // _showProgressNotification(showDownloadSpeed, totalBytes,
+              //     receivedBytes, fileName, startTime);
             }
           }
           if (totalBytes != -1) {
@@ -204,19 +206,12 @@ class TBIBDownloader {
     return solvePath ?? "$downloadDirectory$fileName";
   }
 
-  Future<void> _showProgressNotification(bool showDownloadSpeed, int totalBytes,
+  Future _showProgressNotification(bool showDownloadSpeed, int totalBytes,
       int receivedBytes, String fileName, DateTime startTime) async {
-    int progress = 0;
-    double totalMB = 0;
-    double receivedMB = 0;
-    if (totalBytes != -1) {
-      progress = min((receivedBytes / totalBytes * 100).round(), 100);
-      totalMB = totalBytes / 1048576;
-      receivedMB = (receivedBytes / 1048576);
-    } else {
-      progress = 100;
-      totalMB = totalBytes / 1048576;
-    }
+    num progress = min((receivedBytes / totalBytes * 100).round(), 100);
+    num totalMB = totalBytes / 1048576;
+    num receivedMB = (receivedBytes / 1048576);
+
     double speedMbps = 0;
     if (showDownloadSpeed) {
       Duration duration = DateTime.now().difference(startTime);
@@ -234,7 +229,7 @@ class TBIBDownloader {
               'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s ${speedMbps == 0 ? "" : 'speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s'} ',
           notificationLayout: NotificationLayout.ProgressBar,
           wakeUpScreen: true,
-          progress: progress),
+          progress: progress.toInt()),
     );
   }
 }
