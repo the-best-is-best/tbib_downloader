@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:math';
@@ -15,15 +16,20 @@ import 'package:tbib_downloader/src/service/handler_time.dart';
 ///  class for downloading files from the internet
 class TBIBDownloader {
   /// download file from the internet
-  static late Dio dio;
-  static bool downloadStarted = false;
+  static late Dio _dio;
+  static bool _downloadStarted = false;
+  static const int _receiveThreshold = 1024 * 1024; // 1 MB
+  static late BuildContext _context;
+  static Timer? _timer;
+  // 100 ms
+
   // static late double speed;
 
   /// init downloader
   Future<void> init() async {
     await AwesomeNotifications().requestPermissionToSendNotifications();
     await Permission.storage.request();
-    dio = Dio();
+    _dio = Dio();
 
     await AwesomeNotifications().initialize(
       null,
@@ -31,7 +37,7 @@ class TBIBDownloader {
         NotificationChannel(
             icon: 'resource://drawable/ic_stat_file_download',
             channelKey: 'download_channel',
-            importance: NotificationImportance.Low,
+            importance: NotificationImportance.Max,
             ledOffMs: 100,
             ledOnMs: 500,
             locked: true,
@@ -57,6 +63,7 @@ class TBIBDownloader {
   /// file name with extension
   /// directory name ios only
   Future<String?> downloadFile<T>({
+    required BuildContext context,
     required String url,
     required String fileName,
     String? directoryName,
@@ -64,6 +71,7 @@ class TBIBDownloader {
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
+    Duration refreshNotificationProgress = const Duration(milliseconds: 1),
     //bool showDownloadSpeed = true,
     bool showNotificationWithoutProgress = false,
     Function({required int receivedBytes, required int totalBytes})?
@@ -71,11 +79,13 @@ class TBIBDownloader {
     //required Dio dio,
   }) async {
     late String downloadDirectory;
-    if (downloadStarted) {
+    _context = context;
+
+    if (_downloadStarted) {
       dev.log('Download already started');
       return null;
     }
-    downloadStarted = true;
+    _downloadStarted = true;
     if (Platform.isAndroid) {
       downloadDirectory =
           "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
@@ -91,105 +101,118 @@ class TBIBDownloader {
     }
 
     await Directory(downloadDirectory).create(recursive: true);
-    // if (Platform.isIOS && showNotification) {
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: 1,
-        channelKey: 'download_channel',
-        title: 'Downloading',
-        body: 'Downloading $fileName',
-        wakeUpScreen: true,
-      ),
-    );
-    // }
+    if (Platform.isIOS && showNotification) {
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
+          id: 1,
+          channelKey: 'download_channel',
+          title: 'Downloading',
+          body: 'Downloading $fileName',
+          wakeUpScreen: true,
+        ),
+      );
+    }
     // String speedText = 'calculating...';
     // int speed = 0;
 
     // int lastCount = 0;
     // int totalSec = 0;
     Handler handler = Handler();
+    DateTime startTime = DateTime.now();
+
     String? solvePath;
     if (File('$downloadDirectory$fileName').existsSync()) {
       solvePath = await getAvailableFilePath('$downloadDirectory$fileName');
     }
     bool showNewNotification = true;
-    await dio.download(
-      url,
-      solvePath ?? "$downloadDirectory$fileName",
-      options: Options(
-        responseType: ResponseType.bytes,
-        followRedirects: false,
-      ),
-      onReceiveProgress: (receivedBytes, totalBytes) async {
-        if (showNotificationWithoutProgress || Platform.isIOS) {
-          return onReceiveProgress?.call(
-              receivedBytes: receivedBytes, totalBytes: totalBytes);
-        }
-        if (showNotification && totalBytes != -1) {
-          // dev.log(
-          //     'before noti receivedBytes: $receivedBytes, totalBytes: $totalBytes'
-          //     'showNewNotification: $showNewNotification');
-          if (showNewNotification) {
-            showNewNotification = false;
-
-            await _showProgressNotification(
-                totalBytes, receivedBytes, fileName);
-          } else {
-            handler.post(const Duration(seconds: 1), () {
-              showNewNotification = true;
-            });
-          }
-        }
-        if (totalBytes != -1) {
-          return onReceiveProgress?.call(
-              receivedBytes: receivedBytes, totalBytes: totalBytes);
-        } else {
-          dev.log('totalBytes == -1');
-        }
-      },
-    );
-
-    if (showNotification) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      await AwesomeNotifications().dismiss(1);
-      await AwesomeNotifications().createNotification(
-        actionButtons: hideButtons
-            ? null
-            : [
-                NotificationActionButton(
-                  enabled: !disabledOpenFileButton,
-                  color: Colors.green.shade900,
-                  key: "tbib_downloader_open_file",
-                  label: "Open File",
-                ),
-                NotificationActionButton(
-                  enabled: !disabledDeleteFileButton,
-                  key: "tbib_downloader_delete_file",
-                  isDangerousOption: true,
-                  color: Colors.red.shade900,
-                  label: "Delete File",
-                ),
-              ],
-        content: NotificationContent(
-          id: 1,
-          channelKey: 'download_completed_channel',
-          title: 'Download completed',
-          body: 'Download completed $fileName',
-          wakeUpScreen: true,
-          color: Colors.green,
-          payload: {
-            'path': solvePath ?? "$downloadDirectory$fileName",
-            'mime': lookupMimeType(downloadDirectory + fileName)
-          },
+    try {
+      await _dio.download(
+        url,
+        solvePath ?? "$downloadDirectory$fileName",
+        options: Options(
+          responseType: ResponseType.bytes,
+          followRedirects: false,
         ),
+        onReceiveProgress: (receivedBytes, totalBytes) async {
+          // if (!_context.mounted) {
+          //   _timer?.cancel();
+          //   AwesomeNotifications().dismiss(1);
+          //   return;
+          // }
+          if (showNotificationWithoutProgress ||
+              Platform.isIOS ||
+              totalBytes == -1) {
+            return onReceiveProgress?.call(
+                receivedBytes: receivedBytes, totalBytes: totalBytes);
+          }
+          if (showNotification && totalBytes != -1) {
+            // dev.log(
+            //     'before noti receivedBytes: $receivedBytes, totalBytes: $totalBytes'
+            //     'showNewNotification: $showNewNotification');
+            if (showNewNotification) {
+              showNewNotification = false;
+
+              _showProgressNotification(
+                  totalBytes, receivedBytes, fileName, startTime);
+            } else {
+              _timer = handler.post(refreshNotificationProgress, () {
+                showNewNotification = true;
+              });
+            }
+          }
+          if (totalBytes != -1) {
+            return onReceiveProgress?.call(
+                receivedBytes: receivedBytes, totalBytes: totalBytes);
+          } else {
+            dev.log('totalBytes == -1');
+          }
+        },
       );
+
+      if (showNotification) {
+        await AwesomeNotifications().dismiss(1);
+        await AwesomeNotifications().createNotification(
+          actionButtons: hideButtons
+              ? null
+              : [
+                  NotificationActionButton(
+                    enabled: !disabledOpenFileButton,
+                    color: Colors.green.shade900,
+                    key: "tbib_downloader_open_file",
+                    label: "Open File",
+                  ),
+                  NotificationActionButton(
+                    enabled: !disabledDeleteFileButton,
+                    key: "tbib_downloader_delete_file",
+                    isDangerousOption: true,
+                    color: Colors.red.shade900,
+                    label: "Delete File",
+                  ),
+                ],
+          content: NotificationContent(
+            id: 1,
+            channelKey: 'download_completed_channel',
+            title: 'Download completed',
+            body: 'Download completed $fileName',
+            wakeUpScreen: true,
+            color: Colors.green,
+            payload: {
+              'path': solvePath ?? "$downloadDirectory$fileName",
+              'mime': lookupMimeType(downloadDirectory + fileName)
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      dev.log('download error: $e');
     }
-    downloadStarted = false;
+    _downloadStarted = false;
+
     return solvePath ?? "$downloadDirectory$fileName";
   }
 
-  Future<void> _showProgressNotification(
-      int totalBytes, int receivedBytes, String fileName) async {
+  Future<void> _showProgressNotification(int totalBytes, int receivedBytes,
+      String fileName, DateTime startTime) async {
     int progress = 0;
     double totalMB = 0;
     double receivedMB = 0;
@@ -201,6 +224,9 @@ class TBIBDownloader {
       progress = 100;
       totalMB = totalBytes / 1048576;
     }
+    Duration duration = DateTime.now().difference(startTime);
+    double seconds = duration.inMilliseconds / 1000;
+    double speedMbps = receivedMB / seconds * 8;
     // dev.log(
     //     'after noti receivedBytes: $receivedBytes, totalBytes: $totalBytes progress: $progress');
     await AwesomeNotifications().createNotification(
@@ -209,9 +235,9 @@ class TBIBDownloader {
           channelKey: 'download_channel',
           title: 'Downloading',
           body:
-              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s',
+              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s',
           notificationLayout: NotificationLayout.ProgressBar,
-          // wakeUpScreen: true,
+          wakeUpScreen: true,
           progress: progress),
     );
 

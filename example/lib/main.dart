@@ -69,17 +69,24 @@ class _MainPageState extends State<MainPage> {
               ElevatedButton(
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
-                    showNotificationWithoutProgress: true,
+                    context: context,
+                    refreshNotificationProgress: const Duration(seconds: 1),
                     url: 'http://212.183.159.230/20MB.zip',
-                    fileName: 'dummy.pdf',
+                    fileName: 'dummy.zip',
                     directoryName: 'test',
                     onReceiveProgress: ({int? receivedBytes, int? totalBytes}) {
+                      if (!context.mounted) {
+                        return;
+                      }
                       setState(() {
                         progress = (receivedBytes! / totalBytes!);
                       });
                     },
                   );
                   debugPrint('path $path');
+                  if (!context.mounted) {
+                    return;
+                  }
                   setState(() {
                     progress = 0;
                   });
@@ -90,7 +97,8 @@ class _MainPageState extends State<MainPage> {
               ElevatedButton(
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
-                    showNotification: false,
+                    context: context,
+
                     url:
                         'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
                     fileName: 'dummy1.pdf',
