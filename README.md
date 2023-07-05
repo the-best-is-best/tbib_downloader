@@ -6,15 +6,15 @@
 
 - Can display progress in your app
   
-<img  src="github_assets/app.jpg" height="200"></img>
+<img  src="https://github.com/the-best-is-best/tbib_downloader/blob/master/github_assets/app.jpg?raw=true" height="300"></img>
 
 - Notification with progress bar
 
-<img  src="github_assets/download_start.jpg" height="200"></img>
+<img  src="https://github.com/the-best-is-best/tbib_downloader/blob/master/github_assets/download_start.jpg?raw=true" height="300"></img>
 
 - Notification downloaded ended
 
-<img  src="github_assets/download_completed.jpg" height="200"></img>
+<img  src="https://github.com/the-best-is-best/tbib_downloader/blob/master/github_assets/download_completed.jpg?raw=true" height="300"></img>
 
 - ios configuration
 

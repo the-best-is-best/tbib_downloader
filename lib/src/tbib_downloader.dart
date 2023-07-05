@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tbib_downloader/src/service/format_bytes.dart';
 import 'package:tbib_downloader/src/service/get_avalible_file.dart';
 
 ///  class for downloading files from the internet
@@ -17,6 +18,7 @@ class TBIBDownloader {
   /// download file from the internet
   static late Dio _dio;
   static bool _downloadStarted = false;
+  static final num _convertBytesToMB = pow(10, 6);
 
   // 100 ms
 
@@ -70,6 +72,7 @@ class TBIBDownloader {
     Duration refreshNotificationProgress = const Duration(seconds: 1),
     bool showDownloadSpeed = true,
     bool showNotificationWithoutProgress = false,
+    bool receiveBytesAsMB = false,
     Function({required int receivedBytes, required int totalBytes})?
         onReceiveProgress,
     //required Dio dio,
@@ -129,9 +132,21 @@ class TBIBDownloader {
           followRedirects: false,
         ),
         onReceiveProgress: (receivedBytes, totalBytes) async {
-          if (showNotificationWithoutProgress ||
-              Platform.isIOS ||
-              totalBytes == -1) {
+          // if (receiveBytesAsFileSizeUnit) {
+          // receivedBytes = formatBytes(receivedBytes, 2).size;
+          // totalBytes = formatBytes(totalBytes, 2).size;
+          // }
+          if (showNotificationWithoutProgress || Platform.isIOS) {
+            if (totalBytes == -1) {
+              dev.log('totalBytes == -1');
+
+              return;
+            }
+            if (receiveBytesAsMB) {
+              return onReceiveProgress?.call(
+                  receivedBytes: (receivedBytes / _convertBytesToMB).floor(),
+                  totalBytes: (totalBytes / _convertBytesToMB).floor());
+            }
             return onReceiveProgress?.call(
                 receivedBytes: receivedBytes, totalBytes: totalBytes);
           }
@@ -156,6 +171,11 @@ class TBIBDownloader {
             }
           }
           if (totalBytes != -1) {
+            if (receiveBytesAsMB) {
+              return onReceiveProgress?.call(
+                  receivedBytes: (receivedBytes / _convertBytesToMB).floor(),
+                  totalBytes: (totalBytes / _convertBytesToMB).floor());
+            }
             return onReceiveProgress?.call(
                 receivedBytes: receivedBytes, totalBytes: totalBytes);
           } else {
@@ -206,11 +226,18 @@ class TBIBDownloader {
     return solvePath ?? "$downloadDirectory$fileName";
   }
 
-  Future _showProgressNotification(bool showDownloadSpeed, int totalBytes,
-      int receivedBytes, String fileName, DateTime startTime) async {
+  Future _showProgressNotification(
+      // bool receiveBytesAsFileSizeUnit,
+      bool showDownloadSpeed,
+      int totalBytes,
+      int receivedBytes,
+      String fileName,
+      DateTime startTime) async {
     num progress = min((receivedBytes / totalBytes * 100).round(), 100);
-    num totalMB = totalBytes / 1048576;
-    num receivedMB = (receivedBytes / 1048576);
+    num totalMB = formatBytes(totalBytes, 2).size;
+    num receivedMB = formatBytes(receivedBytes, 2).size;
+    // String receiveUnit = formatBytes(receivedBytes, 2).unit;
+    String totalUnit = formatBytes(totalBytes, 2).unit;
 
     double speedMbps = 0;
     if (showDownloadSpeed) {
@@ -226,7 +253,7 @@ class TBIBDownloader {
           channelKey: 'download_channel',
           title: 'Downloading',
           body:
-              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} MB/s ${speedMbps == 0 ? "" : 'speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s'} ',
+              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} $totalUnit ${speedMbps == 0 ? "" : 'speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s'} ',
           notificationLayout: NotificationLayout.ProgressBar,
           wakeUpScreen: true,
           progress: progress.toInt()),
