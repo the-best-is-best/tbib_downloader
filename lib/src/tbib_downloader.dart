@@ -89,7 +89,12 @@ class TBIBDownloader {
       downloadDirectory =
           "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
     } else {
-      downloadDirectory = "${(await getApplicationDocumentsDirectory()).path}/";
+      if (saveFileInDataApp) {
+        downloadDirectory = "${(await getApplicationSupportDirectory()).path}/";
+      } else {
+        downloadDirectory =
+            "${(await getApplicationDocumentsDirectory()).path}/";
+      }
     }
     if (directoryName != null) {
       downloadDirectory = "$downloadDirectory$directoryName/";

@@ -1,3 +1,7 @@
+## 1.0.2
+
+* fix ios not save file in cache
+
 ## 1.0.1
 
 * Now android create directory folder

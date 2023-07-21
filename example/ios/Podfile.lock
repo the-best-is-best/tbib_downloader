@@ -10,8 +10,6 @@ PODS:
     - Flutter
   - open_file (0.0.1):
     - Flutter
-  - package_info_plus (0.4.5):
-    - Flutter
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -26,7 +24,6 @@ DEPENDENCIES:
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - open_app_file (from `.symlinks/plugins/open_app_file/ios`)
   - open_file (from `.symlinks/plugins/open_file/ios`)
-  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - tbib_downloader (from `.symlinks/plugins/tbib_downloader/ios`)
@@ -46,8 +43,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/open_app_file/ios"
   open_file:
     :path: ".symlinks/plugins/open_file/ios"
-  package_info_plus:
-    :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   permission_handler_apple:
@@ -62,7 +57,6 @@ SPEC CHECKSUMS:
   IosAwnCore: edf31913fd18960ebcde7c05912dc860ca2b63b2
   open_app_file: 205f73051668bfbd68356005fef8a62e620f0a77
   open_file: 02eb5cb6b21264bd3a696876f5afbfb7ca4f4b7d
-  package_info_plus: fd030dabf36271f146f1f3beacd48f564b0f17f7
   path_provider_foundation: eaf5b3e458fc0e5fbb9940fb09980e853fe058b8
   permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
   tbib_downloader: 249caffb18170d1decc811201a43b6445062dfe8
