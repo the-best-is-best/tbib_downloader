@@ -104,6 +104,7 @@ class _MainPageState extends State<MainPage> {
                     url:
                         'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
                     fileName: 'dummy1.pdf',
+                    saveFileInDataApp: true,
                     directoryName: 'test',
                     // onReceiveProgress: ({int? count, int? total}) => debugPrint(
                     //     'count: $count, total: $total, progress: ${count! / total!}'),

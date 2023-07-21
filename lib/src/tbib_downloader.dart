@@ -36,7 +36,7 @@ class TBIBDownloader {
         NotificationChannel(
             icon: 'resource://drawable/ic_stat_file_download',
             channelKey: 'download_channel',
-            importance: NotificationImportance.Min,
+            importance: NotificationImportance.Max,
             ledOffMs: 100,
             ledOnMs: 500,
             locked: true,
@@ -69,6 +69,7 @@ class TBIBDownloader {
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
+    bool saveFileInDataApp = false,
     Duration refreshNotificationProgress = const Duration(seconds: 1),
     bool showDownloadSpeed = true,
     bool showNotificationWithoutProgress = false,
@@ -84,13 +85,13 @@ class TBIBDownloader {
       return null;
     }
     _downloadStarted = true;
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid && !saveFileInDataApp) {
       downloadDirectory =
           "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
     } else {
       downloadDirectory = "${(await getApplicationDocumentsDirectory()).path}/";
     }
-    if (directoryName != null && !Platform.isAndroid) {
+    if (directoryName != null) {
       downloadDirectory = "$downloadDirectory$directoryName/";
     }
 
@@ -110,11 +111,7 @@ class TBIBDownloader {
             locked: true),
       );
     }
-    // String speedText = 'calculating...';
-    // int speed = 0;
 
-    // int lastCount = 0;
-    // int totalSec = 0;
     DateTime startTime = DateTime.now();
     DateTime notificationDisplayDate = DateTime.now();
     DateTime endTime = DateTime.now().add(refreshNotificationProgress);
