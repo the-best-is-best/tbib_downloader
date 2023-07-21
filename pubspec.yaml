@@ -1,6 +1,6 @@
 name: tbib_downloader
 description: This package for download file and open it you can display notifications and progress notification and can receive download bytes and total bytes.
-version: 1.0.1
+version: 1.0.2
 homepage: "https://github.com/the-best-is-best/tbib_downloader"
 
 environment:
