@@ -16,7 +16,7 @@ dependencies:
     sdk: flutter
   mime: ^1.0.4
   open_app_file: ^4.0.2
-  package_info_plus: ^4.0.2
+  #package_info_plus: ^4.0.2
   path_provider: ^2.0.15
   permission_handler: ^10.4.1
   plugin_platform_interface: ^2.0.2

@@ -36,7 +36,7 @@ class TBIBDownloader {
         NotificationChannel(
             icon: 'resource://drawable/ic_stat_file_download',
             channelKey: 'download_channel',
-            importance: NotificationImportance.Max,
+            importance: NotificationImportance.Min,
             ledOffMs: 100,
             ledOnMs: 500,
             locked: true,
@@ -102,12 +102,12 @@ class TBIBDownloader {
     if (Platform.isIOS && showNotification) {
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
-          id: 1,
-          channelKey: 'download_channel',
-          title: 'Downloading',
-          body: 'Downloading $fileName',
-          wakeUpScreen: true,
-        ),
+            id: 1,
+            channelKey: 'download_channel',
+            title: 'Downloading',
+            body: 'Downloading $fileName',
+            wakeUpScreen: true,
+            locked: true),
       );
     }
     // String speedText = 'calculating...';
@@ -256,6 +256,7 @@ class TBIBDownloader {
               'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} $totalUnit ${speedMbps == 0 ? "" : 'speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s'} ',
           notificationLayout: NotificationLayout.ProgressBar,
           wakeUpScreen: true,
+          locked: true,
           progress: progress.toInt()),
     );
   }
