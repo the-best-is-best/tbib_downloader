@@ -128,6 +128,9 @@ class MyNotificationService {
 
 - how to download
 
+<h4>Note</h4>
+<p>in version 1.0.1 can use attribute  saveFileInDataApp to save in android/data/${package name}/...</p>
+
 ```dart
  ElevatedButton(
                 onPressed: () async {
