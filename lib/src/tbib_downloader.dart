@@ -26,36 +26,41 @@ class TBIBDownloader {
 
   /// init downloader
   Future<void> init() async {
-    await AwesomeNotifications().requestPermissionToSendNotifications();
     await Permission.storage.request();
     _dio = Dio();
-
-    await AwesomeNotifications().initialize(
-      null,
-      [
-        NotificationChannel(
-            icon: 'resource://drawable/ic_stat_file_download',
-            channelKey: 'download_channel',
-            importance: NotificationImportance.Max,
-            ledOffMs: 100,
-            ledOnMs: 500,
-            locked: true,
-            channelName: 'Download notifications',
-            channelDescription: 'Notification channel for download progress',
-            defaultColor: Colors.black,
-            ledColor: Colors.white,
-            channelShowBadge: false),
-        NotificationChannel(
-            icon: 'resource://drawable/ic_stat_file_download_done',
-            importance: NotificationImportance.Max,
-            channelKey: 'download_completed_channel',
-            channelName: 'Download completed notifications',
-            channelDescription: 'Notification channel for download completed',
-            defaultColor: Colors.black,
-            ledColor: Colors.white,
-            channelShowBadge: false),
-      ],
-    );
+    var permission = await Permission.notification.isGranted;
+    if (!permission) {
+      await Permission.notification.request();
+    }
+    permission = await Permission.notification.isGranted;
+    if (permission) {
+      await AwesomeNotifications().initialize(
+        null,
+        [
+          NotificationChannel(
+              icon: 'resource://drawable/ic_stat_file_download',
+              channelKey: 'download_channel',
+              importance: NotificationImportance.Max,
+              ledOffMs: 100,
+              ledOnMs: 500,
+              locked: true,
+              channelName: 'Download notifications',
+              channelDescription: 'Notification channel for download progress',
+              defaultColor: Colors.black,
+              ledColor: Colors.white,
+              channelShowBadge: false),
+          NotificationChannel(
+              icon: 'resource://drawable/ic_stat_file_download_done',
+              importance: NotificationImportance.Max,
+              channelKey: 'download_completed_channel',
+              channelName: 'Download completed notifications',
+              channelDescription: 'Notification channel for download completed',
+              defaultColor: Colors.black,
+              ledColor: Colors.white,
+              channelShowBadge: false),
+        ],
+      );
+    }
   }
 
   /// download file from the internet
@@ -65,11 +70,11 @@ class TBIBDownloader {
     required String url,
     required String fileName,
     String? directoryName,
-    bool showNotification = true,
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
     bool saveFileInDataApp = false,
+    bool showNotification = true,
     Duration refreshNotificationProgress = const Duration(seconds: 1),
     bool showDownloadSpeed = true,
     bool showNotificationWithoutProgress = false,

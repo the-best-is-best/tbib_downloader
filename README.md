@@ -15,6 +15,7 @@
 - Notification downloaded ended
 
 <img  src="https://github.com/the-best-is-best/tbib_downloader/blob/master/github_assets/download_completed.jpg?raw=true" height="300"></img>
+`
 
 - ios configuration
 
@@ -27,6 +28,7 @@
  BUILD_LIBRARY_FOR_DISTRIBUTION = NO  
  ```
 
+`
 <h3> step 2 </h3>
 
 - in info.plist
