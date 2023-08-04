@@ -26,7 +26,6 @@ class TBIBDownloader {
 
   /// init downloader
   Future<void> init() async {
-    await Permission.storage.request();
     _dio = Dio();
     var permission = await Permission.notification.isGranted;
     if (!permission) {
@@ -70,6 +69,7 @@ class TBIBDownloader {
     required String url,
     required String fileName,
     String? directoryName,
+    required BuildContext context,
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
     bool hideButtons = false,
@@ -83,6 +83,26 @@ class TBIBDownloader {
         onReceiveProgress,
     //required Dio dio,
   }) async {
+    await Permission.storage.request();
+    if (!await Permission.storage.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(10),
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+          content: Text('Permission denied to access storage'),
+        ),
+      );
+      Future.delayed(const Duration(seconds: 2), () {
+        openAppSettings();
+      });
+      return null;
+    }
+
     late String downloadDirectory;
 
     if (_downloadStarted) {

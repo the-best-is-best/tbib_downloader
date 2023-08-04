@@ -1,3 +1,7 @@
+## 1.0.4
+
+- Ask permission if needed and display error and  open setting if denied after 2 sec
+
 ## 1.0.3
 
 - fix permission notification issue when not allowed with awesome notification

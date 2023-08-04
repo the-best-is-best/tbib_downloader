@@ -74,6 +74,7 @@ class _MainPageState extends State<MainPage> {
               ElevatedButton(
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
+                    context: context,
                     url: 'https://speed.hetzner.de/100MB.bin',
                     receiveBytesAsMB: true,
                     fileName: 'dummy.bin',
@@ -101,6 +102,8 @@ class _MainPageState extends State<MainPage> {
               ElevatedButton(
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
+                    context: context,
+
                     url:
                         'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
                     fileName: 'dummy1.pdf',
