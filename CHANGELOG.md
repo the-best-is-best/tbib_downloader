@@ -1,3 +1,8 @@
+## 1.10.0
+
+- fix permission storage in android 12 or above
+- support share button in notification
+
 ## 1.0.4
 
 - Ask permission if needed and display error and  open setting if denied after 2 sec

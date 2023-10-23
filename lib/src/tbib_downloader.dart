@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
@@ -24,44 +25,6 @@ class TBIBDownloader {
 
   // static late double speed;
 
-  /// init downloader
-  Future<void> init() async {
-    _dio = Dio();
-    var permission = await Permission.notification.isGranted;
-    if (!permission) {
-      await Permission.notification.request();
-    }
-    permission = await Permission.notification.isGranted;
-    if (permission) {
-      await AwesomeNotifications().initialize(
-        null,
-        [
-          NotificationChannel(
-              icon: 'resource://drawable/ic_stat_file_download',
-              channelKey: 'download_channel',
-              importance: NotificationImportance.Max,
-              ledOffMs: 100,
-              ledOnMs: 500,
-              locked: true,
-              channelName: 'Download notifications',
-              channelDescription: 'Notification channel for download progress',
-              defaultColor: Colors.black,
-              ledColor: Colors.white,
-              channelShowBadge: false),
-          NotificationChannel(
-              icon: 'resource://drawable/ic_stat_file_download_done',
-              importance: NotificationImportance.Max,
-              channelKey: 'download_completed_channel',
-              channelName: 'Download completed notifications',
-              channelDescription: 'Notification channel for download completed',
-              defaultColor: Colors.black,
-              ledColor: Colors.white,
-              channelShowBadge: false),
-        ],
-      );
-    }
-  }
-
   /// download file from the internet
   /// file name with extension
   /// directory name ios only
@@ -72,6 +35,7 @@ class TBIBDownloader {
     required BuildContext context,
     bool disabledOpenFileButton = false,
     bool disabledDeleteFileButton = false,
+    bool disabledShareFileButton = false,
     bool hideButtons = false,
     bool saveFileInDataApp = false,
     bool showNotification = true,
@@ -84,25 +48,44 @@ class TBIBDownloader {
     //required Dio dio,
   }) async {
     await Permission.storage.request();
-    if (!await Permission.storage.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.red,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(10),
-            ),
-          ),
-          behavior: SnackBarBehavior.floating,
-          content: Text('Permission denied to access storage'),
-        ),
-      );
-      Future.delayed(const Duration(seconds: 2), () {
-        openAppSettings();
-      });
-      return null;
-    }
+    if (Platform.isAndroid) {
+      final deviceInfo = await DeviceInfoPlugin().androidInfo;
+      if (deviceInfo.version.sdkInt < 30) {
+        bool checkPermission;
+        if (await Permission.storage.isDenied) {
+          await Permission.storage.request();
+        }
+        checkPermission = await Permission.storage.isGranted;
+        if (!checkPermission) {
+          var status = await Permission.storage.isGranted;
+          if (!status) {
+            status = await Permission.storage.request().isGranted;
+          }
+          if (!status) {
+            // show snakebar error permission
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                content: const Text(
+                  'Permission denied to access storage',
+                ),
+              ),
+            );
 
+            Future.delayed(
+              const Duration(seconds: 2),
+              openAppSettings,
+            );
+
+            return "";
+          }
+        }
+      }
+    }
     late String downloadDirectory;
 
     if (_downloadStarted) {
@@ -230,6 +213,12 @@ class TBIBDownloader {
                     color: Colors.red.shade900,
                     label: "Delete File",
                   ),
+                  NotificationActionButton(
+                    enabled: !disabledShareFileButton,
+                    key: "tbib_downloader_share_file",
+                    color: Colors.green.shade900,
+                    label: "Share File",
+                  ),
                 ],
           content: NotificationContent(
             id: 1,
@@ -251,6 +240,44 @@ class TBIBDownloader {
     _downloadStarted = false;
 
     return solvePath ?? "$downloadDirectory$fileName";
+  }
+
+  /// init downloader
+  Future<void> init() async {
+    _dio = Dio();
+    var permission = await Permission.notification.isGranted;
+    if (!permission) {
+      await Permission.notification.request();
+    }
+    permission = await Permission.notification.isGranted;
+    if (permission) {
+      await AwesomeNotifications().initialize(
+        null,
+        [
+          NotificationChannel(
+              icon: 'resource://drawable/ic_stat_file_download',
+              channelKey: 'download_channel',
+              importance: NotificationImportance.Max,
+              ledOffMs: 100,
+              ledOnMs: 500,
+              locked: true,
+              channelName: 'Download notifications',
+              channelDescription: 'Notification channel for download progress',
+              defaultColor: Colors.black,
+              ledColor: Colors.white,
+              channelShowBadge: false),
+          NotificationChannel(
+              icon: 'resource://drawable/ic_stat_file_download_done',
+              importance: NotificationImportance.Max,
+              channelKey: 'download_completed_channel',
+              channelName: 'Download completed notifications',
+              channelDescription: 'Notification channel for download completed',
+              defaultColor: Colors.black,
+              ledColor: Colors.white,
+              channelShowBadge: false),
+        ],
+      );
+    }
   }
 
   Future _showProgressNotification(

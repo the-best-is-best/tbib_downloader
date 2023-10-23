@@ -35,20 +35,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  @override
-  void initState() {
-    super.initState();
-    AwesomeNotifications().setListeners(
-        onActionReceivedMethod: MyNotificationService.onActionReceivedMethod,
-        onNotificationCreatedMethod:
-            MyNotificationService.onNotificationCreatedMethod,
-        onNotificationDisplayedMethod:
-            MyNotificationService.onNotificationDisplayedMethod,
-        onDismissActionReceivedMethod:
-            MyNotificationService.onDismissActionReceivedMethod);
-  }
-
   double progress = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +63,7 @@ class _MainPageState extends State<MainPage> {
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
                     context: context,
-                    url: 'https://speed.hetzner.de/100MB.bin',
+                    url: 'http://speedtest.ftp.otenet.gr/files/test10Mb.db',
                     receiveBytesAsMB: true,
                     fileName: 'dummy.bin',
                     directoryName: 'test',
@@ -134,5 +122,18 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    AwesomeNotifications().setListeners(
+        onActionReceivedMethod: MyNotificationService.onActionReceivedMethod,
+        onNotificationCreatedMethod:
+            MyNotificationService.onNotificationCreatedMethod,
+        onNotificationDisplayedMethod:
+            MyNotificationService.onNotificationDisplayedMethod,
+        onDismissActionReceivedMethod:
+            MyNotificationService.onDismissActionReceivedMethod);
   }
 }
