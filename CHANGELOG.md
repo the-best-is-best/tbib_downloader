@@ -1,3 +1,7 @@
+## 1.10.1
+
+- update dependency
+
 ## 1.10.0
 
 - fix permission storage in android 12 or above
