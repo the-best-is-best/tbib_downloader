@@ -1,3 +1,7 @@
+## 1.10.2
+
+- fix build apk 
+
 ## 1.10.1
 
 - update dependency

@@ -18,8 +18,8 @@ dependencies:
   flutter:
     sdk: flutter
   open_file: ^3.2.1
-  path_provider: ^2.0.15
-  permission_handler: ^11.0.1
+  path_provider: ^2.1.1
+  permission_handler: ^11.1.0
   tbib_downloader:
     path: ../
 

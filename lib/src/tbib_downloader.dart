@@ -47,45 +47,29 @@ class TBIBDownloader {
         onReceiveProgress,
     //required Dio dio,
   }) async {
-    await Permission.storage.request();
-    if (Platform.isAndroid) {
-      final deviceInfo = await DeviceInfoPlugin().androidInfo;
-      if (deviceInfo.version.sdkInt < 30) {
-        bool checkPermission;
-        if (await Permission.storage.isDenied) {
-          await Permission.storage.request();
-        }
-        checkPermission = await Permission.storage.isGranted;
-        if (!checkPermission) {
-          var status = await Permission.storage.isGranted;
-          if (!status) {
-            status = await Permission.storage.request().isGranted;
-          }
-          if (!status) {
-            // show snakebar error permission
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                content: const Text(
-                  'Permission denied to access storage',
-                ),
+    final deviceInfo = await DeviceInfoPlugin().androidInfo;
+    if (deviceInfo.version.sdkInt < 30) {
+      await Permission.storage.request();
+      if (!await Permission.storage.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.red,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(10),
               ),
-            );
-
-            Future.delayed(
-              const Duration(seconds: 2),
-              openAppSettings,
-            );
-
-            return "";
-          }
-        }
+            ),
+            behavior: SnackBarBehavior.floating,
+            content: Text('Permission denied to access storage'),
+          ),
+        );
+        Future.delayed(const Duration(seconds: 2), () {
+          openAppSettings();
+        });
+        return null;
       }
     }
+
     late String downloadDirectory;
 
     if (_downloadStarted) {
