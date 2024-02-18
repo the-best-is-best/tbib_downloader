@@ -271,7 +271,7 @@ class TBIBDownloader {
       int receivedBytes,
       String fileName,
       DateTime startTime) async {
-    num progress = min((receivedBytes / totalBytes * 100).round(), 100);
+    num progress = min((receivedBytes / totalBytes * 100), 100);
     num totalMB = formatBytes(totalBytes, 2).size;
     num receivedMB = formatBytes(receivedBytes, 2).size;
     // String receiveUnit = formatBytes(receivedBytes, 2).unit;
@@ -295,7 +295,7 @@ class TBIBDownloader {
           notificationLayout: NotificationLayout.ProgressBar,
           wakeUpScreen: true,
           locked: true,
-          progress: progress.toInt()),
+          progress: progress.toDouble()),
     );
   }
 }

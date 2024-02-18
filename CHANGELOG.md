@@ -1,3 +1,11 @@
+## 2.0.1
+
+- readme
+
+## 2.0.0
+
+- update dep
+
 ## 1.10.2
 
 - fix build apk 

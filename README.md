@@ -19,14 +19,9 @@
 
 - ios configuration
 
-<h3> step 1 </h3>
+<h3> step 1 BUILD_LIBRARY_FOR_DISTRIBUTION to NO</h3>
 
-```swift
- Change
-  BUILD_LIBRARY_FOR_DISTRIBUTION = YES 
- to 
- BUILD_LIBRARY_FOR_DISTRIBUTION = NO  
- ```
+<img  src="https://github.com/the-best-is-best/tbib_downloader/blob/master/github_assets/xcode_change_need.png?raw=true" height="300"></img>
 
 `
 <h3> step 2 </h3>
