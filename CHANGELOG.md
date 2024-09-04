@@ -1,3 +1,7 @@
+## 2.1.0
+
+- change dep for open files
+
 ## 2.0.3
 
 - update dep
