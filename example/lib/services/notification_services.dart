@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:tbib_downloader/tbib_downloader.dart';
 
@@ -9,10 +7,8 @@ class MyNotificationService {
   static Future<void> onActionReceivedMethod(
       ReceivedAction receivedAction) async {
     if (receivedAction.buttonKeyPressed == 'tbib_downloader_open_file') {
-      var res = await TBIBDownloaderOpenFile()
+      await TBIBDownloaderOpenFile()
           .openFile(path: receivedAction.payload!['path']!);
-
-      log(res.message);
     } else if (receivedAction.buttonKeyPressed ==
         'tbib_downloader_delete_file') {
       await TBIBDownloaderOpenFile()

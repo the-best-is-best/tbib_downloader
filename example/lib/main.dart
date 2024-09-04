@@ -93,7 +93,7 @@ class _MainPageState extends State<MainPage> {
                     context: context,
 
                     url:
-                        'https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf',
+                        'https://file-examples.com/storage/fef44df12666d835ba71c24/2017/10/file-sample_150kB.pdf',
                     fileName: 'dummy1.pdf',
                     saveFileInDataApp: true,
                     directoryName: 'test',
@@ -108,7 +108,7 @@ class _MainPageState extends State<MainPage> {
               // button close this page and go to new page
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const SecondPage(),

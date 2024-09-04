@@ -1,15 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:open_app_file/open_app_file.dart';
+import 'package:open_file/open_file.dart';
 
 class TBIBDownloaderOpenFile {
-  Future<OpenResult> openFile(
-      {required String path,
-      String? mimeType,
-      bool linuxByProcess = false,
-      String linuxDesktopName = "xdg",
-      String? uti}) async {
+  Future<void> openFile(
+      {required String path, String? mimeType, String? uti}) async {
     if (!Platform.isAndroid && !Platform.isIOS) {
       throw Exception("Platform not supported");
     }
@@ -17,14 +13,15 @@ class TBIBDownloaderOpenFile {
     // if (await canManageStorage() == false) {
     //   throw Exception("Permission not granted");
     // }
-    var getType = androidType.containsKey('.${path.split(".").last}')
-        ? androidType['.${path.split(".").last}']
-        : null;
-    var getUti = iosUTI.containsKey('.${path.split(".").last}')
-        ? iosUTI['.${path.split(".").last}']
-        : null;
-    return await OpenAppFile.open(path,
-        mimeType: mimeType ?? getType, uti: uti ?? getUti);
+    // var getType = androidType.containsKey('.${path.split(".").last}')
+    //     ? androidType['.${path.split(".").last}']
+    //     : null;
+    // var getUti = iosUTI.containsKey('.${path.split(".").last}')
+    //     ? iosUTI['.${path.split(".").last}']
+    //     : null;
+    // return await OpenAppFile.open(path,
+    //     mimeType: mimeType ?? getType, uti: uti ?? getUti);
+    await OpenFile.open(path, type: mimeType);
   }
 
   // Future<void> openFolder(String path) async {
