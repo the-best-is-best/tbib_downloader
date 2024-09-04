@@ -25,6 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace "com.tbib_downloader.tbib_downloader"
     compileSdkVersion 34
     defaultConfig {
         multiDexEnabled true

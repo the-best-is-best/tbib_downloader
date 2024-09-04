@@ -1,4 +1,10 @@
+## 2.0.3
+
+- update dep
+- add namespace in gradle
+
 ## 2.0.2
+
 - update dep
 
 ## 2.0.1
@@ -12,7 +18,7 @@
 
 ## 1.10.2
 
-- fix build apk 
+- fix build apk
 
 ## 1.10.1
 
