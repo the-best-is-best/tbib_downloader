@@ -49,13 +49,13 @@ class _MainPageState extends State<MainPage> {
       /// pdf file total size issue is https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf
       body: Column(
         children: [
-          //if (progress > 0)
-          Align(
-            alignment: Alignment.topCenter,
-            child: LinearProgressIndicator(
-              value: progress,
+          if (progress > 0)
+            Align(
+              alignment: Alignment.topCenter,
+              child: LinearProgressIndicator(
+                value: progress,
+              ),
             ),
-          ),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -63,7 +63,7 @@ class _MainPageState extends State<MainPage> {
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
                     context: context,
-                    url: 'http://speedtest.ftp.otenet.gr/files/test10Mb.db',
+                    url: 'https://ash-speed.hetzner.com/100MB.bin',
                     receiveBytesAsMB: true,
                     fileName: 'dummy.bin',
                     directoryName: 'test',

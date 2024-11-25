@@ -2,7 +2,7 @@ name: tbib_downloader
 description: This package for download file and open it you can display
   notifications and progress notification and can receive download bytes and
   total bytes.
-version: 2.1.0+1
+version: 2.2.0
 homepage: "https://github.com/the-best-is-best/tbib_downloader"
 
 environment:
@@ -10,21 +10,21 @@ environment:
   flutter: ">=3.0.0"
 
 dependencies:
-  awesome_notifications: ^0.9.3+1
-  device_info_plus: ^10.1.2
-  dio: ^5.6.0
+  awesome_notifications: ^0.10.0
+  device_info_plus: ^11.1.1
+  dio: ^5.7.0
   external_path: ^2.0.1
   flutter:
     sdk: flutter
-  mime: ^1.0.6
-  open_file: ^3.5.3
-  path_provider: ^2.1.4
+  mime: ^2.0.0
+  open_file: ^3.5.10
+  path_provider: ^2.1.5
   permission_handler: ^11.3.1
   plugin_platform_interface: ^2.1.8
-  share_plus: ^10.0.2
+  share_plus: ^10.1.2
 
 dev_dependencies:
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter
 

@@ -47,26 +47,28 @@ class TBIBDownloader {
         onReceiveProgress,
     //required Dio dio,
   }) async {
-    final deviceInfo = await DeviceInfoPlugin().androidInfo;
-    if (deviceInfo.version.sdkInt < 30) {
-      await Permission.storage.request();
-      if (!await Permission.storage.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Colors.red,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(10),
+    if (Platform.isAndroid) {
+      final deviceInfo = await DeviceInfoPlugin().androidInfo;
+      if (deviceInfo.version.sdkInt < 30) {
+        await Permission.storage.request();
+        if (!await Permission.storage.isGranted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(10),
+                ),
               ),
+              behavior: SnackBarBehavior.floating,
+              content: Text('Permission denied to access storage'),
             ),
-            behavior: SnackBarBehavior.floating,
-            content: Text('Permission denied to access storage'),
-          ),
-        );
-        Future.delayed(const Duration(seconds: 2), () {
-          openAppSettings();
-        });
-        return null;
+          );
+          Future.delayed(const Duration(seconds: 2), () {
+            openAppSettings();
+          });
+          return null;
+        }
       }
     }
 
@@ -88,8 +90,14 @@ class TBIBDownloader {
             "${(await getApplicationDocumentsDirectory()).path}/";
       }
     }
-    if (directoryName != null) {
+    if (directoryName != null && Platform.isIOS) {
       downloadDirectory = "$downloadDirectory$directoryName/";
+    }
+    if (Platform.isAndroid && directoryName != null) {
+      final deviceInfo = await DeviceInfoPlugin().androidInfo;
+      if (deviceInfo.version.sdkInt > 30) {
+        downloadDirectory = "$downloadDirectory$directoryName/";
+      }
     }
 
     if (File(downloadDirectory).existsSync()) {

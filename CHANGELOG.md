@@ -1,3 +1,7 @@
+## 2.2.0
+
+- fix all bugs
+
 ## 2.1.0
 
 - change dep for open files
