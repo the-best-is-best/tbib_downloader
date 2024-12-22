@@ -1,3 +1,7 @@
+## 2.2.1
+
+- support SPM
+
 ## 2.2.0
 
 - fix all bugs
