@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -118,7 +119,6 @@ class TBIBDownloader {
     }
 
     DateTime startTime = DateTime.now();
-    DateTime notificationDisplayDate = DateTime.now();
     DateTime endTime = DateTime.now().add(refreshNotificationProgress);
     String? solvePath;
     if (File('$downloadDirectory$fileName').existsSync()) {
@@ -133,55 +133,31 @@ class TBIBDownloader {
           responseType: ResponseType.bytes,
           followRedirects: false,
         ),
-        onReceiveProgress: (receivedBytes, totalBytes) async {
-          // if (receiveBytesAsFileSizeUnit) {
-          // receivedBytes = formatBytes(receivedBytes, 2).size;
-          // totalBytes = formatBytes(totalBytes, 2).size;
-          // }
-          if (showNotificationWithoutProgress || Platform.isIOS) {
-            if (totalBytes == -1) {
-              dev.log('totalBytes == -1');
-
-              return;
-            }
-            if (receiveBytesAsMB) {
-              return onReceiveProgress?.call(
-                  receivedBytes: (receivedBytes / _convertBytesToMB).floor(),
-                  totalBytes: (totalBytes / _convertBytesToMB).floor());
-            }
-            return onReceiveProgress?.call(
-                receivedBytes: receivedBytes, totalBytes: totalBytes);
-          }
-          if (showNotification && totalBytes != -1) {
-            if (showNewNotification) {
+        onReceiveProgress: (count, total) async {
+          if (showNotification) {
+            final now = DateTime.now();
+            if (showNewNotification || now.isAfter(endTime)) {
               showNewNotification = false;
 
-              await _showProgressNotification(showDownloadSpeed, totalBytes,
-                  receivedBytes, fileName, startTime);
-            } else {
-              notificationDisplayDate = DateTime.now();
-              if (notificationDisplayDate.millisecondsSinceEpoch >
-                  endTime.millisecondsSinceEpoch) {
-                //   await AwesomeNotifications().dismiss(1);
+              if (Platform.isAndroid) {
+                _onSendProgress(
+                  count,
+                  total,
+                  startTime: startTime,
+                  refreshNotificationProgress: refreshNotificationProgress,
+                  showNotification: showDownloadSpeed,
+                  showDownloadSpeed: showDownloadSpeed,
+                  receiveBytesAsMB: receiveBytesAsMB,
+                  showNotificationWithoutProgress:
+                      showNotificationWithoutProgress,
+                  onReceiveProgress: onReceiveProgress,
+                );
+              } else {
+                // iOS-specific updates
+                endTime = now.add(refreshNotificationProgress);
                 showNewNotification = true;
-                notificationDisplayDate = endTime;
-                endTime = DateTime.now().add(refreshNotificationProgress);
               }
-
-              // _showProgressNotification(showDownloadSpeed, totalBytes,
-              //     receivedBytes, fileName, startTime);
             }
-          }
-          if (totalBytes != -1) {
-            if (receiveBytesAsMB) {
-              return onReceiveProgress?.call(
-                  receivedBytes: (receivedBytes / _convertBytesToMB).floor(),
-                  totalBytes: (totalBytes / _convertBytesToMB).floor());
-            }
-            return onReceiveProgress?.call(
-                receivedBytes: receivedBytes, totalBytes: totalBytes);
-          } else {
-            dev.log('totalBytes == -1');
           }
         },
       );
@@ -272,38 +248,115 @@ class TBIBDownloader {
     }
   }
 
-  Future _showProgressNotification(
-      // bool receiveBytesAsFileSizeUnit,
-      bool showDownloadSpeed,
-      int totalBytes,
-      int receivedBytes,
-      String fileName,
-      DateTime startTime) async {
-    num progress = min((receivedBytes / totalBytes * 100), 100);
-    num totalMB = formatBytes(totalBytes, 2).size;
-    num receivedMB = formatBytes(receivedBytes, 2).size;
-    // String receiveUnit = formatBytes(receivedBytes, 2).unit;
-    String totalUnit = formatBytes(totalBytes, 2).unit;
-
-    double speedMbps = 0;
-    if (showDownloadSpeed) {
-      Duration duration = DateTime.now().difference(startTime);
-      double seconds = duration.inMilliseconds / 1000;
-      speedMbps = receivedMB / seconds * 8;
-    }
-    // dev.log(
-    //     'after noti receivedBytes: $receivedBytes, totalBytes: $totalBytes progress: $progress');
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
+  Future<void> _onSendProgress(
+    int countDownloaded,
+    int total, {
+    required bool showDownloadSpeed,
+    required bool showNotificationWithoutProgress,
+    required bool receiveBytesAsMB,
+    required bool showNotification,
+    required Duration refreshNotificationProgress,
+    required DateTime startTime,
+    required Function({required int receivedBytes, required int totalBytes})?
+        onReceiveProgress,
+  }) async {
+    if (Platform.isIOS && showNotification) {
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
           id: 1,
-          channelKey: 'download_channel',
-          title: 'Downloading',
-          body:
-              'Downloading $fileName ${totalBytes >= 0 ? '(${(receivedMB).toStringAsFixed(2)} / ${(totalMB).toStringAsFixed(2)})' : '${(receivedMB).toStringAsFixed(2)} / nil'} $totalUnit ${speedMbps == 0 ? "" : 'speed ${(speedMbps / 8).toStringAsFixed(2)} MB/s'} ',
-          notificationLayout: NotificationLayout.ProgressBar,
+          channelKey: 'upload_channel',
+          title: 'Start uploading',
+          body: '',
           wakeUpScreen: true,
           locked: true,
-          progress: progress.toDouble()),
+        ),
+      );
+    }
+
+    if (showNotificationWithoutProgress || Platform.isIOS) {
+      if (receiveBytesAsMB) {
+        onReceiveProgress?.call(
+          receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
+          totalBytes: (total / _convertBytesToMB).floor(),
+        );
+      }
+      onReceiveProgress?.call(
+        receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
+        totalBytes: (total / _convertBytesToMB).floor(),
+      );
+    }
+    if (!showNotification) {
+      if (receiveBytesAsMB) {
+        onReceiveProgress?.call(
+          receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
+          totalBytes: (total / _convertBytesToMB).floor(),
+        );
+      }
+      onReceiveProgress?.call(
+        receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
+        totalBytes: (total / _convertBytesToMB).floor(),
+      );
+    } else {
+      await _showProgressNotification(
+        // receiveBytesAsFileSizeUnit,
+        showDownloadSpeed,
+        total,
+        countDownloaded,
+        // fileName,
+        startTime,
+      );
+      if (receiveBytesAsMB) {
+        onReceiveProgress?.call(
+          receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
+          totalBytes: (total / _convertBytesToMB).floor(),
+        );
+      }
+      onReceiveProgress?.call(
+        receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
+        totalBytes: (total / _convertBytesToMB).floor(),
+      );
+    }
+  }
+
+  Future<void> _showProgressNotification(
+    bool showDownloadSpeed,
+    int totalBytes,
+    int receivedBytes,
+    DateTime startTime,
+  ) async {
+    // Calculate progress
+    final progress =
+        totalBytes > 0 ? math.min(receivedBytes / totalBytes * 100, 100) : 0;
+
+    // Format bytes into human-readable units
+    final totalData = formatBytes(totalBytes, 2);
+    final receivedData = formatBytes(receivedBytes, 2);
+    final totalMB = totalData.size;
+    final receivedMB = receivedData.size;
+
+    // Calculate download speed
+    var speedMBps = 0.0;
+    if (showDownloadSpeed) {
+      final duration = DateTime.now().difference(startTime);
+      final seconds =
+          duration.inMilliseconds > 0 ? duration.inMilliseconds / 1000 : 1;
+      speedMBps = receivedBytes / seconds / (1024 * 1024); // Speed in MB/s
+    }
+
+    // Send notification
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 1,
+        channelKey: 'download_channel',
+        title: 'Downloading',
+        body:
+            'Downloading (${receivedMB.toStringAsFixed(2)} / ${totalMB.toStringAsFixed(2)} MB)'
+            '${speedMBps > 0 ? ' Speed: ${speedMBps.toStringAsFixed(2)} MB/s' : ''}',
+        notificationLayout: NotificationLayout.ProgressBar,
+        wakeUpScreen: true,
+        locked: true,
+        progress: progress.clamp(0, 100).toDouble(),
+      ),
     );
   }
 }

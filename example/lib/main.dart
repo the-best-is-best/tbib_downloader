@@ -62,27 +62,12 @@ class _MainPageState extends State<MainPage> {
               ElevatedButton(
                 onPressed: () async {
                   var path = await TBIBDownloader().downloadFile(
-                    context: context,
-                    url: 'https://ash-speed.hetzner.com/100MB.bin',
-                    receiveBytesAsMB: true,
-                    fileName: 'dummy.bin',
-                    directoryName: 'test',
-                    onReceiveProgress: ({int? receivedBytes, int? totalBytes}) {
-                      if (!context.mounted) {
-                        return;
-                      }
-                      setState(() {
-                        progress = (receivedBytes! / totalBytes!);
-                      });
-                    },
-                  );
-                  debugPrint('path $path');
-                  if (!context.mounted) {
-                    return;
-                  }
-                  setState(() {
-                    progress = 0;
-                  });
+                      context: context,
+                      url: 'https://ash-speed.hetzner.com/1GB.bin',
+                      receiveBytesAsMB: true,
+                      fileName: 'remittance_report.pdf',
+                      directoryName: 'pdf',
+                      disabledShareFileButton: true);
                 },
                 child: const Text('download'),
               ),

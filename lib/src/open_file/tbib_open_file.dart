@@ -3,46 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 
-class TBIBDownloaderOpenFile {
-  Future<void> openFile(
-      {required String path, String? mimeType, String? uti}) async {
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      throw Exception("Platform not supported");
-    }
-
-    // if (await canManageStorage() == false) {
-    //   throw Exception("Permission not granted");
-    // }
-    // var getType = androidType.containsKey('.${path.split(".").last}')
-    //     ? androidType['.${path.split(".").last}']
-    //     : null;
-    // var getUti = iosUTI.containsKey('.${path.split(".").last}')
-    //     ? iosUTI['.${path.split(".").last}']
-    //     : null;
-    // return await OpenAppFile.open(path,
-    //     mimeType: mimeType ?? getType, uti: uti ?? getUti);
-    await OpenFile.open(path, type: mimeType);
-  }
-
-  // Future<void> openFolder(String path) async {
-  //   File file = File(path);
-  //   final FileManagerController controller = FileManagerController();
-  //   controller.openDirectory(file);
-  // }
-
-  Future<void> deleteFile(String path) async {
-    // if (await canManageStorage() == false) {
-    //   throw Exception("Permission not granted");
-    // }
-    File file = File(path);
-    if (file.existsSync()) {
-      file.deleteSync();
-    } else {
-      debugPrint("File not found");
-    }
-  }
-}
-
 Map<String, String> androidType = {
   ".3gp": "video/3gpp",
   ".torrent": "application/x-bittorrent",
@@ -150,3 +110,41 @@ Map iosUTI = {
   ".wmv": "com.microsoft.windows-​media-wmv",
   ".pdf": "com.adobe.pdf"
 };
+
+class TBIBDownloaderOpenFile {
+  // Future<void> openFolder(String path) async {
+  //   File file = File(path);
+  //   final FileManagerController controller = FileManagerController();
+  //   controller.openDirectory(file);
+  // }
+
+  Future<void> deleteFile(String path) async {
+    // if (await canManageStorage() == false) {
+    //   throw Exception("Permission not granted");
+    // }
+    File file = File(path);
+    if (file.existsSync()) {
+      file.deleteSync();
+    } else {
+      debugPrint("File not found");
+    }
+  }
+
+  Future<void> openFile(
+      {required String path, String? mimeType, String? uti}) async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      throw Exception("Platform not supported");
+    }
+
+    // if (await canManageStorage() == false) {
+    //   throw Exception("Permission not granted");
+    // }
+    var getType = androidType.containsKey('.${path.split(".").last}')
+        ? androidType['.${path.split(".").last}']
+        : null;
+
+    // return await OpenAppFile.open(path,
+    //     mimeType: mimeType ?? getType, uti: uti ?? getUti);
+    await OpenFile.open(path, type: getType);
+  }
+}
