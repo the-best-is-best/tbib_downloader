@@ -168,25 +168,25 @@ class TBIBDownloader {
           actionButtons: hideButtons
               ? null
               : [
-                  NotificationActionButton(
-                    enabled: !disabledOpenFileButton,
-                    color: Colors.green.shade900,
-                    key: "tbib_downloader_open_file",
-                    label: "Open File",
-                  ),
-                  NotificationActionButton(
-                    enabled: !disabledDeleteFileButton,
-                    key: "tbib_downloader_delete_file",
-                    isDangerousOption: true,
-                    color: Colors.red.shade900,
-                    label: "Delete File",
-                  ),
-                  NotificationActionButton(
-                    enabled: !disabledShareFileButton,
-                    key: "tbib_downloader_share_file",
-                    color: Colors.green.shade900,
-                    label: "Share File",
-                  ),
+                  if (!disabledOpenFileButton)
+                    NotificationActionButton(
+                      color: Colors.green.shade900,
+                      key: "tbib_downloader_open_file",
+                      label: "Open File",
+                    ),
+                  if (!disabledDeleteFileButton)
+                    NotificationActionButton(
+                      isDangerousOption: true,
+                      color: Colors.red.shade900,
+                      key: "tbib_downloader_delete_file",
+                      label: "Delete File",
+                    ),
+                  if (!disabledShareFileButton)
+                    NotificationActionButton(
+                      color: Colors.green.shade900,
+                      key: "tbib_downloader_share_file",
+                      label: "Share File",
+                    ),
                 ],
           content: NotificationContent(
             id: 1,
