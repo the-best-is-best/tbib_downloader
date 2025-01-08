@@ -30,8 +30,8 @@ class TBIBDownloader {
   /// directory name ios only
   Future<String?> downloadFile<T>({
     required Dio dio,
-    required Map<String, dynamic> headers,
-    required Map<String, dynamic> queryParameters,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? queryParameters,
     required String method,
     required String url,
     required String fileName,
