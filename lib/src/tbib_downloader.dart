@@ -18,7 +18,6 @@ import 'package:tbib_downloader/src/service/get_avalible_file.dart';
 ///  class for downloading files from the internet
 class TBIBDownloader {
   /// download file from the internet
-  static late Dio _dio;
   static bool _downloadStarted = false;
   static final num _convertBytesToMB = pow(10, 6);
 
@@ -30,6 +29,10 @@ class TBIBDownloader {
   /// file name with extension
   /// directory name ios only
   Future<String?> downloadFile<T>({
+    required Dio dio,
+    required Map<String, dynamic> headers,
+    required Map<String, dynamic> queryParameters,
+    required String method,
     required String url,
     required String fileName,
     String? directoryName,
@@ -126,10 +129,12 @@ class TBIBDownloader {
     }
     bool showNewNotification = true;
     try {
-      await _dio.download(
+      await dio.download(
         url,
+        queryParameters: queryParameters,
         solvePath ?? "$downloadDirectory$fileName",
         options: Options(
+          headers: headers,
           responseType: ResponseType.bytes,
           followRedirects: false,
         ),
@@ -212,7 +217,6 @@ class TBIBDownloader {
 
   /// init downloader
   Future<void> init() async {
-    _dio = Dio();
     var permission = await Permission.notification.isGranted;
     if (!permission) {
       await Permission.notification.request();

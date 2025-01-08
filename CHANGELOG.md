@@ -1,4 +1,8 @@
-## 2.2.3
+# 2.3.0
+
+- now need Dio as a parameter and can add headers and queryParameters
+
+# 2.2.3
 
 - fix bug
 - buttons will be created if disable with true
