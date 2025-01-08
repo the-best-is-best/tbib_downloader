@@ -29,10 +29,9 @@ class TBIBDownloader {
   /// file name with extension
   /// directory name ios only
   Future<String?> downloadFile<T>({
-    required Dio dio,
+    Dio? dio,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? queryParameters,
-    required String method,
     required String url,
     required String fileName,
     String? directoryName,
@@ -129,6 +128,7 @@ class TBIBDownloader {
     }
     bool showNewNotification = true;
     try {
+      dio ??= Dio();
       await dio.download(
         url,
         queryParameters: queryParameters,
