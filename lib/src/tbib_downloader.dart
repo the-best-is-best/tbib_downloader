@@ -7,7 +7,6 @@ import 'dart:math';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
@@ -83,8 +82,7 @@ class TBIBDownloader {
     }
     _downloadStarted = true;
     if (Platform.isAndroid && !saveFileInDataApp) {
-      downloadDirectory =
-          "${await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_DOWNLOADS)}/";
+      downloadDirectory = "${await getDownloadsDirectory()}/";
     } else {
       if (saveFileInDataApp) {
         downloadDirectory = "${(await getApplicationSupportDirectory()).path}/";
