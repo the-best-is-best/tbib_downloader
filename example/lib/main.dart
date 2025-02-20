@@ -78,7 +78,7 @@ class _MainPageState extends State<MainPage> {
                     context: context,
 
                     url:
-                        'https://file-examples.com/storage/fef44df12666d835ba71c24/2017/10/file-sample_150kB.pdf',
+                        'https://file-examples.com/wp-content/storage/2017/10/file-example_PDF_1MB.pdf',
                     fileName: 'dummy1.pdf',
                     saveFileInDataApp: true,
                     directoryName: 'test',

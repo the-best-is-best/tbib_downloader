@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -13,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tbib_downloader/src/service/format_bytes.dart';
 import 'package:tbib_downloader/src/service/get_avalible_file.dart';
+import 'package:tbib_downloader/src/tbib_native_downloader.dart';
 
 ///  class for downloading files from the internet
 class TBIBDownloader {
@@ -82,7 +82,8 @@ class TBIBDownloader {
     }
     _downloadStarted = true;
     if (Platform.isAndroid && !saveFileInDataApp) {
-      downloadDirectory = "${await getDownloadsDirectory()}/";
+      downloadDirectory =
+          "${(await TbibNativeDownloader.getDownloadsDirectory())!}/";
     } else {
       if (saveFileInDataApp) {
         downloadDirectory = "${(await getApplicationSupportDirectory()).path}/";
@@ -94,6 +95,8 @@ class TBIBDownloader {
     if (directoryName != null && Platform.isIOS) {
       downloadDirectory = "$downloadDirectory$directoryName/";
     }
+    dev.log("getDownloadsDirectory $downloadDirectory");
+
     if (Platform.isAndroid && directoryName != null) {
       final deviceInfo = await DeviceInfoPlugin().androidInfo;
       if (deviceInfo.version.sdkInt > 30) {
@@ -328,16 +331,16 @@ class TBIBDownloader {
   ) async {
     // Calculate progress
     final progress =
-        totalBytes > 0 ? math.min(receivedBytes / totalBytes * 100, 100) : 0;
+        totalBytes > 0 ? min(receivedBytes / totalBytes * 100, 100) : 0;
 
     // Format bytes into human-readable units
     final totalData = formatBytes(totalBytes, 2);
     final receivedData = formatBytes(receivedBytes, 2);
-    final totalMB = totalData.size;
-    final receivedMB = receivedData.size;
+    final totalSize = totalData.size;
+    final receivedSize = receivedData.size;
 
     // Calculate download speed
-    var speedMBps = 0.0;
+    double speedMBps = 0.0;
     if (showDownloadSpeed) {
       final duration = DateTime.now().difference(startTime);
       final seconds =
@@ -352,7 +355,7 @@ class TBIBDownloader {
         channelKey: 'download_channel',
         title: 'Downloading',
         body:
-            'Downloading (${receivedMB.toStringAsFixed(2)} / ${totalMB.toStringAsFixed(2)} MB)'
+            'Downloading (${receivedSize.toStringAsFixed(2)} ${receivedData.unit} / ${totalSize.toStringAsFixed(2)} ${totalData.unit})'
             '${speedMBps > 0 ? ' Speed: ${speedMBps.toStringAsFixed(2)} MB/s' : ''}',
         notificationLayout: NotificationLayout.ProgressBar,
         wakeUpScreen: true,

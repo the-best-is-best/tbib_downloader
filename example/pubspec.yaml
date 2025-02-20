@@ -28,7 +28,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  awesome_notifications: ^0.10.0
+  awesome_notifications: 
+    path: ../../awesome_notifications
 
 dev_dependencies:
   integration_test:
