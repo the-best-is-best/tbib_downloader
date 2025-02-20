@@ -3,7 +3,7 @@
 - Support flutter 3.29.x
 - fix bug
 
-# 2.3.0
+## 2.3.0 - 2.3.2
 
 - now need Dio as a parameter and can add headers and queryParameters
 
