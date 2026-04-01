@@ -5,10 +5,11 @@ class TbibNativeDownloader {
 
   static Future<String?> getDownloadsDirectory() async {
     try {
-      final String? downloadsPath =
-          await _channel.invokeMethod('getDownloadsDirectory');
+      final String? downloadsPath = await _channel.invokeMethod(
+        'getDownloadsDirectory',
+      );
       return downloadsPath;
-    } on PlatformException catch (e) {
+    } on PlatformException {
       return null;
     }
   }

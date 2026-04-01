@@ -1,5 +1,9 @@
 ## 2.4.0
 
+update dep
+
+## 2.4.0
+
 - Support flutter 3.29.x
 - fix bug
 
@@ -12,7 +16,7 @@
 - fix bug
 - buttons will be created if disable with true
 
-## 2.2.1 -  2.2.2
+## 2.2.1 - 2.2.2
 
 - support SPM
 
@@ -57,7 +61,7 @@
 
 ## 1.0.4
 
-- Ask permission if needed and display error and  open setting if denied after 2 sec
+- Ask permission if needed and display error and open setting if denied after 2 sec
 
 ## 1.0.3
 
@@ -83,6 +87,8 @@
 - solve images in pub dev
 
 ## 0.0.1
+
+- init.
 
 - init.
   
