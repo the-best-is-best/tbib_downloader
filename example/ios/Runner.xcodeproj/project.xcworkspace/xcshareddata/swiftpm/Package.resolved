@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "iosawncore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rafaelsetragni/IosAwnCore.git",
+      "state" : {
+        "revision" : "b37f17d46efd990c6ccb41ae9201242098c58adf",
+        "version" : "0.12.0"
+      }
+    }
+  ],
+  "version" : 2
+}

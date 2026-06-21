@@ -1,3 +1,15 @@
+# Changelog
+
+## [2.6.0] - 2026-06-21
+
+### Features
+
+### Improvements
+
+- Dependencies: Bumped versions for awesome_notifications, device_info_plus, dio, open_file, permission_handler, and share_plus.
+- Swift Configuration: Updated Package.swift to include FlutterFramework dependency and added Package.resolved for better Swift Package Manager tracking.
+- Project Metadata: Added .metadata file for better Flutter project tracking.
+
 ## 2.4.0
 
 update dep
@@ -91,4 +103,3 @@ update dep
 - init.
 
 - init.
-  

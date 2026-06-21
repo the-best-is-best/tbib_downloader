@@ -78,7 +78,7 @@ class _MainPageState extends State<MainPage> {
                     context: context,
 
                     url:
-                        'https://file-examples.com/wp-content/storage/2017/10/file-example_PDF_1MB.pdf',
+                        'https://tourism.gov.in/sites/default/files/2019-04/dummy-pdf_2.pdf',
                     fileName: 'dummy1.pdf',
                     saveFileInDataApp: true,
                     directoryName: 'test',
@@ -86,6 +86,7 @@ class _MainPageState extends State<MainPage> {
                     //     'count: $count, total: $total, progress: ${count! / total!}'),
                   );
                   debugPrint('path $path');
+                  TBIBDownloaderOpenFile().openFile(path: path!);
                 },
                 child: const Text('download 1'),
               ),
