@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.6.0-fix.1] - 2026-06-21
+
+### Fixed
+
+- Dependencies: Downgraded device_info_plus to version 12.4.0 and share_plus to 12.0.2 for stability.
+
 ## [2.6.0] - 2026-06-21
 
 ### Features
