@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:tbib_downloader/tbib_downloader.dart';
@@ -12,7 +14,6 @@ void main() async {
   runApp(const App());
 }
 
-//app
 class App extends StatelessWidget {
   const App({super.key});
 
@@ -35,7 +36,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  double progress = 0;
+  double progress = 0.0;
+  bool isDownloading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -43,67 +45,171 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: const Text('download file'),
       ),
-
-      // zip file url download
-      /// pdf file total size issue is https://www.eurofound.europa.eu/sites/default/files/ef_publication/field_ef_document/ef1710en.pdf
-      /// pdf file total size issue is https://freetestdata.com/wp-content/uploads/2022/11/Free_Test_Data_10.5MB_PDF.pdf
       body: Column(
         children: [
-          if (progress > 0)
-            Align(
-              alignment: Alignment.topCenter,
-              child: LinearProgressIndicator(
-                value: progress,
-              ),
+          if (isDownloading)
+            LinearProgressIndicator(
+              value: progress > 0 ? progress : null,
+              backgroundColor: Colors.blue.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
             ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () async {
-                  var path = await TBIBDownloader().downloadFile(
-                      context: context,
-                      url: 'https://ash-speed.hetzner.com/1GB.bin',
-                      receiveBytesAsMB: true,
-                      fileName: 'remittance_report.pdf',
-                      directoryName: 'pdf',
-                      disabledShareFileButton: true);
-                },
-                child: const Text('download'),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  var path = await TBIBDownloader().downloadFile(
-                    context: context,
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (isDownloading) ...[
+                  Text(
+                    progress > 0
+                        ? "${(progress * 100).toInt()}%"
+                        : "Connecting...",
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                ElevatedButton(
+                  onPressed: isDownloading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isDownloading = true;
+                            progress = 0.0;
+                          });
 
-                    url:
-                        'https://tourism.gov.in/sites/default/files/2019-04/dummy-pdf_2.pdf',
-                    fileName: 'dummy1.pdf',
-                    saveFileInDataApp: true,
-                    directoryName: 'test',
-                    // onReceiveProgress: ({int? count, int? total}) => debugPrint(
-                    //     'count: $count, total: $total, progress: ${count! / total!}'),
-                  );
-                  debugPrint('path $path');
-                  TBIBDownloaderOpenFile().openFile(path: path!);
-                },
-                child: const Text('download 1'),
-              ),
-              const SizedBox(height: 20),
-              // button close this page and go to new page
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SecondPage(),
-                    ),
-                  );
-                },
-                child: const Text('go to second page'),
-              ),
-            ],
+                          try {
+                            var path = await TBIBDownloader().downloadFile(
+                              context: context,
+                              url: 'https://ash-speed.hetzner.com/1GB.bin',
+                              receiveBytesAsMB: true,
+                              fileName: 'remittance_report.pdf',
+                              directoryName: 'pdf',
+                              disabledShareFileButton: true,
+                              onReceiveProgress: (
+                                  {required receivedBytes,
+                                  required totalBytes}) {
+                                if (totalBytes > 0) {
+                                  double currentProgress =
+                                      receivedBytes / totalBytes;
+                                  if ((currentProgress * 100).toInt() !=
+                                      (progress * 100).toInt()) {
+                                    if (mounted) {
+                                      setState(() {
+                                        progress = currentProgress;
+                                      });
+                                    }
+                                  }
+                                }
+                              },
+                            );
+
+                            if (path != null && mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Download Completed!'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            dev.log("Download failed or connection lost: $e");
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Download failed. Connection lost or timed out!'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                isDownloading = false;
+                                progress = 0.0;
+                              });
+                            }
+                          }
+                        },
+                  child: const Text('download'),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: isDownloading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isDownloading = true;
+                            progress = 0.0;
+                          });
+
+                          try {
+                            var path = await TBIBDownloader().downloadFile(
+                              context: context,
+                              url:
+                                  'https://tourism.gov.in/sites/default/files/2019-04/dummy-pdf_2.pdf',
+                              fileName: 'dummy1.pdf',
+                              saveFileInDataApp: true,
+                              directoryName: 'test',
+                              receiveBytesAsMB: false,
+                              onReceiveProgress: (
+                                  {required receivedBytes,
+                                  required totalBytes}) {
+                                if (totalBytes > 0) {
+                                  double currentProgress =
+                                      receivedBytes / totalBytes;
+                                  if ((currentProgress * 100).toInt() !=
+                                      (progress * 100).toInt()) {
+                                    if (mounted) {
+                                      setState(() {
+                                        progress = currentProgress;
+                                      });
+                                    }
+                                  }
+                                }
+                              },
+                            );
+
+                            if (path != null) {
+                              debugPrint('path $path');
+                              TBIBDownloaderOpenFile().openFile(path: path);
+                            }
+                          } catch (e) {
+                            dev.log("Download 1 failed or connection lost: $e");
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Download failed. Connection lost or timed out!'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                isDownloading = false;
+                                progress = 0.0;
+                              });
+                            }
+                          }
+                        },
+                  child: const Text('download 1'),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SecondPage(),
+                      ),
+                    );
+                  },
+                  child: const Text('go to second page'),
+                ),
+              ],
+            ),
           )
         ],
       ),

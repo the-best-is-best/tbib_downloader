@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.6.1] - 2026-06-21
+
+## Fixed
+
+## Fixed
+
+- onReceiveProgress not work correctly
+- fix dep on version 2.6.0-fix.1
+
 ## [2.6.0-fix.1] - 2026-06-21
 
 ### Fixed

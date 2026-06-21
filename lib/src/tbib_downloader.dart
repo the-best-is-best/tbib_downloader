@@ -14,19 +14,10 @@ import 'package:tbib_downloader/src/service/format_bytes.dart';
 import 'package:tbib_downloader/src/service/get_avalible_file.dart';
 import 'package:tbib_downloader/src/tbib_native_downloader.dart';
 
-///  class for downloading files from the internet
 class TBIBDownloader {
-  /// download file from the internet
   static bool _downloadStarted = false;
   static final num _convertBytesToMB = pow(10, 6);
 
-  // 100 ms
-
-  // static late double speed;
-
-  /// download file from the internet
-  /// file name with extension
-  /// directory name ios only
   Future<String?> downloadFile<T>({
     Dio? dio,
     Map<String, dynamic>? headers,
@@ -43,11 +34,9 @@ class TBIBDownloader {
     bool showNotification = true,
     Duration refreshNotificationProgress = const Duration(seconds: 1),
     bool showDownloadSpeed = true,
-    bool showNotificationWithoutProgress = false,
     bool receiveBytesAsMB = false,
     Function({required int receivedBytes, required int totalBytes})?
         onReceiveProgress,
-    //required Dio dio,
   }) async {
     if (Platform.isAndroid) {
       final deviceInfo = await DeviceInfoPlugin().androidInfo;
@@ -58,17 +47,12 @@ class TBIBDownloader {
             const SnackBar(
               backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(10),
-                ),
-              ),
+                  borderRadius: BorderRadius.all(Radius.circular(10))),
               behavior: SnackBarBehavior.floating,
               content: Text('Permission denied to access storage'),
             ),
           );
-          Future.delayed(const Duration(seconds: 2), () {
-            openAppSettings();
-          });
+          Future.delayed(const Duration(seconds: 2), () => openAppSettings());
           return null;
         }
       }
@@ -81,88 +65,86 @@ class TBIBDownloader {
       return null;
     }
     _downloadStarted = true;
-    if (Platform.isAndroid && !saveFileInDataApp) {
-      downloadDirectory =
-          "${(await TbibNativeDownloader.getDownloadsDirectory())!}/";
-    } else {
-      if (saveFileInDataApp) {
-        downloadDirectory = "${(await getApplicationSupportDirectory()).path}/";
-      } else {
-        downloadDirectory =
-            "${(await getApplicationDocumentsDirectory()).path}/";
-      }
-    }
-    if (directoryName != null && Platform.isIOS) {
-      downloadDirectory = "$downloadDirectory$directoryName/";
-    }
-    dev.log("getDownloadsDirectory $downloadDirectory");
 
-    if (Platform.isAndroid && directoryName != null) {
-      final deviceInfo = await DeviceInfoPlugin().androidInfo;
-      if (deviceInfo.version.sdkInt > 30) {
+    try {
+      if (Platform.isAndroid && !saveFileInDataApp) {
+        downloadDirectory =
+            "${(await TbibNativeDownloader.getDownloadsDirectory())!}/";
+      } else {
+        downloadDirectory = saveFileInDataApp
+            ? "${(await getApplicationSupportDirectory()).path}/"
+            : "${(await getApplicationDocumentsDirectory()).path}/";
+      }
+
+      if (directoryName != null && Platform.isIOS) {
         downloadDirectory = "$downloadDirectory$directoryName/";
       }
-    }
 
-    if (File(downloadDirectory).existsSync()) {
-      File(downloadDirectory).deleteSync(recursive: true);
-    }
+      if (Platform.isAndroid && directoryName != null) {
+        final deviceInfo = await DeviceInfoPlugin().androidInfo;
+        if (deviceInfo.version.sdkInt > 30) {
+          downloadDirectory = "$downloadDirectory$directoryName/";
+        }
+      }
 
-    await Directory(downloadDirectory).create(recursive: true);
-    if (Platform.isIOS && showNotification) {
-      await AwesomeNotifications().createNotification(
-        content: NotificationContent(
-            id: 1,
-            channelKey: 'download_channel',
-            title: 'Downloading',
-            body: 'Downloading $fileName',
-            wakeUpScreen: true,
-            locked: true),
-      );
-    }
+      if (File(downloadDirectory).existsSync()) {
+        File(downloadDirectory).deleteSync(recursive: true);
+      }
+      await Directory(downloadDirectory).create(recursive: true);
 
-    DateTime startTime = DateTime.now();
-    DateTime endTime = DateTime.now().add(refreshNotificationProgress);
-    String? solvePath;
-    if (File('$downloadDirectory$fileName').existsSync()) {
-      solvePath = await getAvailableFilePath('$downloadDirectory$fileName');
-    }
-    bool showNewNotification = true;
-    try {
+      if (Platform.isIOS && showNotification) {
+        await AwesomeNotifications().createNotification(
+          content: NotificationContent(
+              id: 1,
+              channelKey: 'download_channel',
+              title: 'Downloading',
+              body: 'Downloading $fileName',
+              wakeUpScreen: true,
+              locked: true),
+        );
+      }
+
+      DateTime startTime = DateTime.now();
+      DateTime endTime = DateTime.now().add(refreshNotificationProgress);
+      String? solvePath;
+      if (File('$downloadDirectory$fileName').existsSync()) {
+        solvePath = await getAvailableFilePath('$downloadDirectory$fileName');
+      }
+
+      bool showNewNotification = true;
       dio ??= Dio();
+      dio.options.connectTimeout = const Duration(seconds: 10);
+      dio.options.receiveTimeout = const Duration(seconds: 15);
       await dio.download(
         url,
-        queryParameters: queryParameters,
         solvePath ?? "$downloadDirectory$fileName",
+        queryParameters: queryParameters,
         options: Options(
           headers: headers,
           responseType: ResponseType.bytes,
           followRedirects: false,
         ),
         onReceiveProgress: (count, total) async {
+          // Trigger the callback ONLY when receiveBytesAsMB is true
+          if (onReceiveProgress != null && receiveBytesAsMB == true) {
+            onReceiveProgress(
+              receivedBytes: (count / _convertBytesToMB).floor(),
+              totalBytes: (total / _convertBytesToMB).floor(),
+            );
+          }
+
           if (showNotification) {
             final now = DateTime.now();
             if (showNewNotification || now.isAfter(endTime)) {
               showNewNotification = false;
 
               if (Platform.isAndroid) {
-                _onSendProgress(
-                  count,
-                  total,
-                  startTime: startTime,
-                  refreshNotificationProgress: refreshNotificationProgress,
-                  showNotification: showDownloadSpeed,
-                  showDownloadSpeed: showDownloadSpeed,
-                  receiveBytesAsMB: receiveBytesAsMB,
-                  showNotificationWithoutProgress:
-                      showNotificationWithoutProgress,
-                  onReceiveProgress: onReceiveProgress,
-                );
-              } else {
-                // iOS-specific updates
-                endTime = now.add(refreshNotificationProgress);
-                showNewNotification = true;
+                await _showProgressNotification(
+                    showDownloadSpeed, total, count, startTime);
               }
+
+              endTime = now.add(refreshNotificationProgress);
+              showNewNotification = true;
             }
           }
         },
@@ -176,23 +158,20 @@ class TBIBDownloader {
               : [
                   if (!disabledOpenFileButton)
                     NotificationActionButton(
-                      color: Colors.green.shade900,
-                      key: "tbib_downloader_open_file",
-                      label: "Open File",
-                    ),
+                        color: Colors.green.shade900,
+                        key: "tbib_downloader_open_file",
+                        label: "Open File"),
                   if (!disabledDeleteFileButton)
                     NotificationActionButton(
-                      isDangerousOption: true,
-                      color: Colors.red.shade900,
-                      key: "tbib_downloader_delete_file",
-                      label: "Delete File",
-                    ),
+                        isDangerousOption: true,
+                        color: Colors.red.shade900,
+                        key: "tbib_downloader_delete_file",
+                        label: "Delete File"),
                   if (!disabledShareFileButton)
                     NotificationActionButton(
-                      color: Colors.green.shade900,
-                      key: "tbib_downloader_share_file",
-                      label: "Share File",
-                    ),
+                        color: Colors.green.shade900,
+                        key: "tbib_downloader_share_file",
+                        label: "Share File"),
                 ],
           content: NotificationContent(
             id: 1,
@@ -208,155 +187,42 @@ class TBIBDownloader {
           ),
         );
       }
+
+      return solvePath ?? "$downloadDirectory$fileName";
     } catch (e) {
       dev.log('download error: $e');
-    }
-    _downloadStarted = false;
+      try {
+        String attemptPath = "$downloadDirectory$fileName";
+        if (File(attemptPath).existsSync()) {
+          File(attemptPath).deleteSync();
+        }
+      } catch (_) {}
 
-    return solvePath ?? "$downloadDirectory$fileName";
+      rethrow;
+    } finally {
+      _downloadStarted = false;
+    }
   }
 
-  /// init downloader
   Future<void> init() async {
     var permission = await Permission.notification.isGranted;
-    if (!permission) {
-      await Permission.notification.request();
-    }
-    permission = await Permission.notification.isGranted;
-    if (permission) {
-      await AwesomeNotifications().initialize(
-        null,
-        [
-          NotificationChannel(
-              icon: 'resource://drawable/ic_stat_file_download',
-              channelKey: 'download_channel',
-              importance: NotificationImportance.Max,
-              ledOffMs: 100,
-              ledOnMs: 500,
-              locked: true,
-              channelName: 'Download notifications',
-              channelDescription: 'Notification channel for download progress',
-              defaultColor: Colors.black,
-              ledColor: Colors.white,
-              channelShowBadge: false),
-          NotificationChannel(
-              icon: 'resource://drawable/ic_stat_file_download_done',
-              importance: NotificationImportance.Max,
-              channelKey: 'download_completed_channel',
-              channelName: 'Download completed notifications',
-              channelDescription: 'Notification channel for download completed',
-              defaultColor: Colors.black,
-              ledColor: Colors.white,
-              channelShowBadge: false),
-        ],
-      );
-    }
+    if (!permission) await Permission.notification.request();
   }
 
-  Future<void> _onSendProgress(
-    int countDownloaded,
-    int total, {
-    required bool showDownloadSpeed,
-    required bool showNotificationWithoutProgress,
-    required bool receiveBytesAsMB,
-    required bool showNotification,
-    required Duration refreshNotificationProgress,
-    required DateTime startTime,
-    required Function({required int receivedBytes, required int totalBytes})?
-        onReceiveProgress,
-  }) async {
-    if (Platform.isIOS && showNotification) {
-      await AwesomeNotifications().createNotification(
-        content: NotificationContent(
-          id: 1,
-          channelKey: 'upload_channel',
-          title: 'Start uploading',
-          body: '',
-          wakeUpScreen: true,
-          locked: true,
-        ),
-      );
-    }
-
-    if (showNotificationWithoutProgress || Platform.isIOS) {
-      if (receiveBytesAsMB) {
-        onReceiveProgress?.call(
-          receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
-          totalBytes: (total / _convertBytesToMB).floor(),
-        );
-      }
-      onReceiveProgress?.call(
-        receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
-        totalBytes: (total / _convertBytesToMB).floor(),
-      );
-    }
-    if (!showNotification) {
-      if (receiveBytesAsMB) {
-        onReceiveProgress?.call(
-          receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
-          totalBytes: (total / _convertBytesToMB).floor(),
-        );
-      }
-      onReceiveProgress?.call(
-        receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
-        totalBytes: (total / _convertBytesToMB).floor(),
-      );
-    } else {
-      await _showProgressNotification(
-        // receiveBytesAsFileSizeUnit,
-        showDownloadSpeed,
-        total,
-        countDownloaded,
-        // fileName,
-        startTime,
-      );
-      if (receiveBytesAsMB) {
-        onReceiveProgress?.call(
-          receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
-          totalBytes: (total / _convertBytesToMB).floor(),
-        );
-      }
-      onReceiveProgress?.call(
-        receivedBytes: (countDownloaded / _convertBytesToMB).floor(),
-        totalBytes: (total / _convertBytesToMB).floor(),
-      );
-    }
-  }
-
-  Future<void> _showProgressNotification(
-    bool showDownloadSpeed,
-    int totalBytes,
-    int receivedBytes,
-    DateTime startTime,
-  ) async {
-    // Calculate progress
+  Future<void> _showProgressNotification(bool showDownloadSpeed, int totalBytes,
+      int receivedBytes, DateTime startTime) async {
     final progress =
         totalBytes > 0 ? min(receivedBytes / totalBytes * 100, 100) : 0;
-
-    // Format bytes into human-readable units
     final totalData = formatBytes(totalBytes, 2);
     final receivedData = formatBytes(receivedBytes, 2);
-    final totalSize = totalData.size;
-    final receivedSize = receivedData.size;
 
-    // Calculate download speed
-    double speedMBps = 0.0;
-    if (showDownloadSpeed) {
-      final duration = DateTime.now().difference(startTime);
-      final seconds =
-          duration.inMilliseconds > 0 ? duration.inMilliseconds / 1000 : 1;
-      speedMBps = receivedBytes / seconds / (1024 * 1024); // Speed in MB/s
-    }
-
-    // Send notification
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: 1,
         channelKey: 'download_channel',
         title: 'Downloading',
         body:
-            'Downloading (${receivedSize.toStringAsFixed(2)} ${receivedData.unit} / ${totalSize.toStringAsFixed(2)} ${totalData.unit})'
-            '${speedMBps > 0 ? ' Speed: ${speedMBps.toStringAsFixed(2)} MB/s' : ''}',
+            'Downloading (${receivedData.size.toStringAsFixed(2)} ${receivedData.unit} / ${totalData.size.toStringAsFixed(2)} ${totalData.unit})',
         notificationLayout: NotificationLayout.ProgressBar,
         wakeUpScreen: true,
         locked: true,
