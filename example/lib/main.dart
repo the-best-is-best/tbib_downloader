@@ -82,6 +82,7 @@ class _MainPageState extends State<MainPage> {
                               context: context,
                               url: 'https://ash-speed.hetzner.com/1GB.bin',
                               receiveBytesAsMB: true,
+                              showNotification: true,
                               fileName: 'remittance_report.pdf',
                               directoryName: 'pdf',
                               disabledShareFileButton: true,

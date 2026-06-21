@@ -92,18 +92,6 @@ class TBIBDownloader {
       }
       await Directory(downloadDirectory).create(recursive: true);
 
-      if (Platform.isIOS && showNotification) {
-        await AwesomeNotifications().createNotification(
-          content: NotificationContent(
-              id: 1,
-              channelKey: 'download_channel',
-              title: 'Downloading',
-              body: 'Downloading $fileName',
-              wakeUpScreen: true,
-              locked: true),
-        );
-      }
-
       DateTime startTime = DateTime.now();
       DateTime endTime = DateTime.now().add(refreshNotificationProgress);
       String? solvePath;
@@ -111,10 +99,24 @@ class TBIBDownloader {
         solvePath = await getAvailableFilePath('$downloadDirectory$fileName');
       }
 
+      // 1. START NOTIFICATION: Show for both Android and iOS at the beginning
+      if (showNotification) {
+        await AwesomeNotifications().createNotification(
+          content: NotificationContent(
+              id: 1,
+              channelKey: 'download_channel',
+              title: 'Download Started',
+              body: 'Downloading $fileName...',
+              wakeUpScreen: Platform.isAndroid, // Only wake screen on Android
+              locked: true),
+        );
+      }
+
       bool showNewNotification = true;
       dio ??= Dio();
       dio.options.connectTimeout = const Duration(seconds: 10);
       dio.options.receiveTimeout = const Duration(seconds: 15);
+
       await dio.download(
         url,
         solvePath ?? "$downloadDirectory$fileName",
@@ -125,7 +127,6 @@ class TBIBDownloader {
           followRedirects: false,
         ),
         onReceiveProgress: (count, total) async {
-          // Trigger the callback ONLY when receiveBytesAsMB is true
           if (onReceiveProgress != null && receiveBytesAsMB == true) {
             onReceiveProgress(
               receivedBytes: (count / _convertBytesToMB).floor(),
@@ -133,15 +134,14 @@ class TBIBDownloader {
             );
           }
 
-          if (showNotification) {
+          // 2. PROGRESS NOTIFICATION: Only update on Android. Skip on iOS completely to prevent bugs.
+          if (showNotification && Platform.isAndroid) {
             final now = DateTime.now();
             if (showNewNotification || now.isAfter(endTime)) {
               showNewNotification = false;
 
-              if (Platform.isAndroid) {
-                await _showProgressNotification(
-                    showDownloadSpeed, total, count, startTime);
-              }
+              await _showProgressNotification(
+                  showDownloadSpeed, total, count, startTime);
 
               endTime = now.add(refreshNotificationProgress);
               showNewNotification = true;
@@ -150,8 +150,10 @@ class TBIBDownloader {
         },
       );
 
+      // 3. END NOTIFICATION: Dismiss start notification and show completed notification for both
       if (showNotification) {
-        await AwesomeNotifications().dismiss(1);
+        await AwesomeNotifications()
+            .dismiss(1); // Remove the active downloading notification
         await AwesomeNotifications().createNotification(
           actionButtons: hideButtons
               ? null
@@ -174,10 +176,10 @@ class TBIBDownloader {
                         label: "Share File"),
                 ],
           content: NotificationContent(
-            id: 1,
+            id: 2,
             channelKey: 'download_completed_channel',
-            title: 'Download completed',
-            body: 'Download completed $fileName',
+            title: 'Download Completed',
+            body: 'Successfully downloaded $fileName',
             wakeUpScreen: true,
             color: Colors.green,
             payload: {
@@ -191,6 +193,9 @@ class TBIBDownloader {
       return solvePath ?? "$downloadDirectory$fileName";
     } catch (e) {
       dev.log('download error: $e');
+      if (showNotification) {
+        await AwesomeNotifications().dismiss(1); // Clean up if failed
+      }
       try {
         String attemptPath = "$downloadDirectory$fileName";
         if (File(attemptPath).existsSync()) {
@@ -205,8 +210,34 @@ class TBIBDownloader {
   }
 
   Future<void> init() async {
-    var permission = await Permission.notification.isGranted;
-    if (!permission) await Permission.notification.request();
+    await AwesomeNotifications().initialize(
+      null,
+      [
+        NotificationChannel(
+            icon: 'resource://drawable/ic_stat_file_download',
+            channelKey: 'download_channel',
+            importance: NotificationImportance.Max,
+            locked: true,
+            channelName: 'Download notifications',
+            channelDescription: 'Notification channel for download progress',
+            defaultColor: Colors.black,
+            channelShowBadge: false),
+        NotificationChannel(
+            icon: 'resource://drawable/ic_stat_file_download_done',
+            importance: NotificationImportance.Max,
+            channelKey: 'download_completed_channel',
+            channelName: 'Download completed notifications',
+            channelDescription: 'Notification channel for download completed',
+            defaultColor: Colors.black,
+            channelShowBadge: false),
+      ],
+    );
+
+    await Permission.storage.request();
+    bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
   }
 
   Future<void> _showProgressNotification(bool showDownloadSpeed, int totalBytes,
@@ -220,11 +251,11 @@ class TBIBDownloader {
       content: NotificationContent(
         id: 1,
         channelKey: 'download_channel',
-        title: 'Downloading',
+        title: 'Downloading File...',
         body:
-            'Downloading (${receivedData.size.toStringAsFixed(2)} ${receivedData.unit} / ${totalData.size.toStringAsFixed(2)} ${totalData.unit})',
+            'Progress: (${receivedData.size.toStringAsFixed(2)} ${receivedData.unit} / ${totalData.size.toStringAsFixed(2)} ${totalData.unit})',
         notificationLayout: NotificationLayout.ProgressBar,
-        wakeUpScreen: true,
+        wakeUpScreen: false,
         locked: true,
         progress: progress.clamp(0, 100).toDouble(),
       ),
